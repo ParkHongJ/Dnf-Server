@@ -1,0 +1,147 @@
+#include "stdafx.h"
+#include "ServerPacketHandler.h"
+#include "Client_Defines.h"
+#include "GameInstance.h"
+#include "Level_Loading.h"
+#include "GameObject.h"
+#include "ServerManager.h"
+#include "Player.h"
+
+PacketHandlerFunc GPacketHandler[UINT16_MAX];
+
+bool ServerPacketHandler::HandlePacket(SOCKET socket, BYTE* buffer, INT32 len)
+{
+	PacketHeader* header = (PacketHeader*)buffer;
+
+	GPacketHandler[header->protocol](socket, buffer, len);
+
+	return false;
+}
+
+bool Handle_INVALID(SOCKET socket, BYTE* buffer, INT32 len)
+{
+	return false;
+}
+
+bool Handle_S_LOGIN(SOCKET socket, BYTE* buffer)
+{
+	ID3D11Device* pDevice = nullptr;
+	ID3D11DeviceContext* pContext = nullptr;
+
+	CGameInstance* pGameInstance = CGameInstance::Get_Instance();
+	pGameInstance->GetDeviceContext(&pDevice, &pContext);
+
+	if (FAILED(pGameInstance->Open_Level(LEVEL_LOADING, CLevel_Loading::Create(pDevice, pContext, LEVEL_GAMEPLAY))))
+	{
+		return false;
+	}
+
+	int id;
+	memcpy(&id, buffer + sizeof(PacketHeader), sizeof(id));
+
+	ServerManager* ServerMgr = ServerManager::GetInstance();
+	ServerMgr->SetClientId(id);
+
+	return true;
+}
+
+bool Handle_S_ENTER_GAME(SOCKET socket, BYTE* buffer)
+{
+	unsigned int PlayerCount;
+
+	int bufferOffset = sizeof(PacketHeader);
+
+	memcpy(&PlayerCount, buffer + bufferOffset, sizeof(PlayerCount));
+	
+	bufferOffset += sizeof(PlayerCount);
+	
+	CGameInstance* pGameInstance = CGameInstance::Get_Instance();
+	for (unsigned int i = 0; i < PlayerCount; i++)
+	{
+		int id;
+		memcpy(&id, buffer + bufferOffset, sizeof(id));
+		bufferOffset += sizeof(id);
+		
+		CGameObject* pGameObject = pGameInstance->Add_GameObjectToLayer(TEXT("Prototype_GameObject_Player"), LEVEL_GAMEPLAY, TEXT("Layer_Player"));
+		
+		if (pGameObject != nullptr)
+		{
+			pGameObject->SetId(id);
+			ServerManager* ServerMgr = ServerManager::GetInstance();
+
+			ServerMgr->AddGameObject(id, pGameObject);
+		}		
+	}
+
+	BYTE packet[PACKET_SIZE] = "";
+
+	PacketHeader header;
+
+	header.protocol = PKT_C_CREATE_PLAYER;
+	header.size = PACKET_SIZE;
+	(*(PacketHeader*)packet) = header;
+
+	send(socket, (const char*)packet, PACKET_SIZE, 0);
+
+	return true;
+}
+
+bool Handle_S_CREATE_PLAYER(SOCKET socket, BYTE* buffer)
+{
+	int id;
+
+	int bufferOffset = sizeof(PacketHeader);
+	memcpy(&id, buffer + bufferOffset, sizeof(int));
+
+	bufferOffset += sizeof(int);
+
+	bool bIsPlayer;
+	memcpy(&bIsPlayer, buffer + bufferOffset, sizeof(bool));
+
+	CGameInstance* pGameInstance = CGameInstance::Get_Instance();
+
+	CGameObject* pGameObject = pGameInstance->Add_GameObjectToLayer(TEXT("Prototype_GameObject_Player"), LEVEL_GAMEPLAY, TEXT("Layer_Player"));
+
+	ServerManager* ServerMgr = ServerManager::GetInstance();
+	pGameObject->SetId(id);
+
+	ServerMgr->AddGameObject(id, pGameObject);
+	
+	CPlayer* pPlayer = dynamic_cast<CPlayer*>(pGameObject);
+	if (pPlayer && bIsPlayer)
+	{
+		pPlayer->SetId(ServerMgr->GetClientId());
+		pPlayer->SetLocallyControlled(bIsPlayer);
+	}
+
+	return true;
+}
+
+bool Handle_S_MOVE(SOCKET socket, BYTE* buffer)
+{
+	int id;
+
+	int bufferOffset = sizeof(PacketHeader);
+	memcpy(&id, buffer + bufferOffset, sizeof(int));
+
+	bufferOffset += sizeof(int);
+
+	_float3 Pos;
+	memcpy(&Pos.x, buffer + bufferOffset, sizeof(Pos));
+
+	ServerManager* ServerMgr = ServerManager::GetInstance();
+
+	CGameObject* pObject = ServerMgr->FindGameObjectById(id);
+
+	if (pObject)
+	{
+		CTransform* pTransform = (CTransform*)pObject->Get_ComponentPtr(TEXT("Com_Transform"));
+		
+		if (pTransform)
+		{
+			pTransform->Set_State(CTransform::STATE_POSITION, XMVectorSetW(XMLoadFloat3(&Pos), 1.f));
+		}
+	}
+
+	return true;
+}

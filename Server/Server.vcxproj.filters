@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ClientPacketHandelr.cpp">
+      <Filter>ClientPacketHandler</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ServerCore">
+      <UniqueIdentifier>{c5a6a513-1a18-4342-a2b8-1a6fb11ed4a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Packet">
+      <UniqueIdentifier>{d8d0c91a-725f-47fb-9930-a40d7325c4c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ClientPacketHandler">
+      <UniqueIdentifier>{dd52864f-239c-4797-8a76-6ea384bbf924}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Util">
+      <UniqueIdentifier>{ec26388f-1315-4cbc-85ae-babbe9e9c584}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Packet.h">
+      <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientPacketHandelr.h">
+      <Filter>ClientPacketHandler</Filter>
+    </ClInclude>
+    <ClInclude Include="Server_Defines.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
