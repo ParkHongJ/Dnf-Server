@@ -170,7 +170,7 @@ PS_OUT PS_MAIN_BLEND(PS_IN In)
 	vector		vShade = g_ShadeTexture.Sample(DefaultSampler, In.vTexUV);
 	vector		vSpecular = g_SpecularTexture.Sample(DefaultSampler, In.vTexUV);
 
-	Out.vColor = vDiffuse * vShade + vSpecular;
+	Out.vColor = vDiffuse/* * vShade + vSpecular*/;
 
 	if (Out.vColor.a == 0.f)
 		discard;

@@ -24,7 +24,10 @@ public:
 		return ((_long*)&m_MouseState)[eMouseMoveID];
 	}
 
+	_bool GetDIKDownState(_uchar eKeyID);
+	_bool GetDIKUPState(_uchar eKeyID);
 
+	_bool GetDIMKeyDownState(DIMK eMouseKeyID);
 
 
 
@@ -38,8 +41,12 @@ private:
 	LPDIRECTINPUTDEVICE8		m_pMouse = nullptr;
 
 private:	
-	_char				m_byKeyState[256] = { 0 };
-	DIMOUSESTATE		m_MouseState;
+	_char m_byKeyState[256] = { 0 };
+	_bool m_keyDownState[256] = { false };
+	_bool m_keyUpState[256] = { false };
+
+	_bool m_mouseDown[DIMM::DIMM_END]{ false };
+	DIMOUSESTATE m_MouseState;
 
 public:
 	virtual void Free();

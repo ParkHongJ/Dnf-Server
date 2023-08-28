@@ -336,12 +336,12 @@ HRESULT CRenderer::Render_Debug()
 	m_pShader->Set_RawValue("g_ViewMatrix", &m_ViewMatrix, sizeof(_float4x4));
 	m_pShader->Set_RawValue("g_ProjMatrix", &m_ProjMatrix, sizeof(_float4x4));
 
-	m_pTarget_Manager->Render_Debug(TEXT("MRT_Deferred"), m_pVIBuffer, m_pShader);
-	m_pTarget_Manager->Render_Debug(TEXT("MRT_LightAcc"), m_pVIBuffer, m_pShader);
+	//m_pTarget_Manager->Render_Debug(TEXT("MRT_Deferred"), m_pVIBuffer, m_pShader);
+	//m_pTarget_Manager->Render_Debug(TEXT("MRT_LightAcc"), m_pVIBuffer, m_pShader);
 
 	for (auto& pDebugCom : m_DebugObject)
 	{
-		pDebugCom->Render();
+		//pDebugCom->Render();
 		Safe_Release(pDebugCom);
 	}
 

@@ -4,25 +4,35 @@
 #include "GameObject.h"
 
 BEGIN(Engine)
-class CModel;
 class CShader;
 class CTexture;
-class CCollider;
 class CRenderer;
 class CTransform;
-class CNavigation;
-
-
-class CHierarchyNode;
+class CVIBuffer_Rect;
 END
 
+enum DIR 
+{
+	LEFT,
+	RIGHT
+};
+
+enum STATE
+{
+	IDLE = 4,
+	WALK = 8,
+	RUN
+};
+enum ANIMATION
+{
+	ANIM_IDLE = 176,
+	ANIM_WALK = 180,
+	ANIM_RUN
+};
 BEGIN(Client)
 
 class CPlayer final : public CGameObject
 {
-public:
-	enum PARTTYPE { PART_WEAPON, PART_END };
-	enum COLLIDERTYPE { COLLIDERTYPE_AABB, COLLIDERTYPE_OBB, COLLIDERTYPE_SPHERE, COLLILDERTYPE_END };
 private:
 	CPlayer(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	CPlayer(const CPlayer& rhs);
@@ -34,38 +44,44 @@ public:
 	virtual void Tick(_float fTimeDelta);
 	virtual void LateTick(_float fTimeDelta);
 	virtual HRESULT Render();
+
 public:
 	void SetLocallyControlled(_bool LocallyControlled) { bLocallyControlled = LocallyControlled; };
 	void SendMovementPacket();
+	void SetDestination(_fvector vPos, int State, int Dir);
+	void PlayAnimation(_float fTimeDelta);
+
+	void IdleTick(_float fTimeDelta);
+	void WalkTick(_float fTimeDelta);
+	void RunTick(_float fTimeDelta);
+
+	void UpdateState(STATE NewState);
 private:
 	CShader*				m_pShaderCom = nullptr;
-
 	CRenderer*				m_pRendererCom = nullptr;
 	CTransform*				m_pTransformCom = nullptr;
-	CModel*					m_pModelCom = nullptr;
-	CCollider*				m_pColliderCom[COLLILDERTYPE_END] = { nullptr } ;
-	CNavigation*			m_pNavigationCom = nullptr;
+	CTexture* m_pTextureCom = nullptr;
+	CVIBuffer_Rect* m_pVIBufferCom = nullptr;
 
 private:
-	vector<CGameObject*>				m_Parts;
-	typedef vector<CGameObject*>		PARTS;
-
-	vector<class CHierarchyNode*>		m_Sockets;
-
 	_bool bLocallyControlled = false;
 
 	// 주기적으로 패킷을 전송
 	_float elapsedTime = 0.0f;
-	_float packetSendInterval = 1.0f; // 1초에 한 번 패킷을 전송
+	_float packetSendInterval = 0.2f; // 0.2초에 한 번 패킷을 전송
 
+	DIR m_eDir = DIR::RIGHT;
+
+	_float3 vDestPos;
+	_bool bAutoRunning = false;
+
+	_float3 vBeforePos;
+
+	STATE m_eState = IDLE;
+	
+	_float m_fFrame = 180.f;
 private:
 	HRESULT Ready_Components();
-
-	HRESULT Ready_Sockets();
-	HRESULT Ready_PlayerParts();
-
-	HRESULT Update_Weapon();
-
 public:
 	static CPlayer* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	virtual CGameObject* Clone(void* pArg);

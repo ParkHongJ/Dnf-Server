@@ -33,19 +33,37 @@ HRESULT CLayer::Initialize()
 
 void CLayer::Tick(_float fTimeDelta)
 {
-	for (auto& pGameObject : m_GameObjects)
+	for (auto iter = m_GameObjects.begin(); iter != m_GameObjects.end();)
 	{
-		if (nullptr != pGameObject)
-			pGameObject->Tick(fTimeDelta);
+		if (nullptr != *iter)
+		{
+			if ((*iter)->HasDestroy())
+			{
+				Safe_Release(*iter); // 객체 해제
+				iter = m_GameObjects.erase(iter); // 리스트에서 제거
+				continue;
+			}
+			(*iter)->Tick(fTimeDelta);
+		}
+		++iter;
 	}
 }
 
 void CLayer::LateTick(_float fTimeDelta)
 {
-	for (auto& pGameObject : m_GameObjects)
+	for (auto iter = m_GameObjects.begin(); iter != m_GameObjects.end();)
 	{
-		if (nullptr != pGameObject)
-			pGameObject->LateTick(fTimeDelta);
+		if (nullptr != *iter)
+		{
+			if ((*iter)->HasDestroy())
+			{
+				Safe_Release(*iter); // 객체 해제
+				iter = m_GameObjects.erase(iter); // 리스트에서 제거
+				continue;
+			}
+			(*iter)->LateTick(fTimeDelta);
+		}
+		++iter;
 	}
 }
 

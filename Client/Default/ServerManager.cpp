@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "ServerManager.h"
 #include "ServerPacketHandler.h"
+#include "GameObject.h"
 
 ServerManager* ServerManager::m_pInstance = nullptr;
 
@@ -65,4 +66,14 @@ void ServerManager::AddGameObject(int id, CGameObject* Object)
 void ServerManager::Send(BYTE* buffer, INT32 len)
 {
 	send(ClientSocket, (const char*)buffer, len, 0);
+}
+
+void ServerManager::DestroyObjectById(int id)
+{
+	CGameObject* pObject = FindGameObjectById(id);
+	if (pObject != nullptr)
+	{
+		pObject->Destroy();
+		Objects.erase(id);
+	}
 }

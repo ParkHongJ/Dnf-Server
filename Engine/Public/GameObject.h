@@ -18,7 +18,8 @@ public:
 	}
 	void SetId(_int id) { m_iId = id; }
 	void SetAuthority(_bool Authority) { m_bHasAuthority = Authority; }
-
+	void Destroy() { m_bDestroy = true; }
+	_bool HasDestroy() { return m_bDestroy; }
 public:
 	virtual HRESULT Initialize_Prototype();
 	virtual HRESULT Initialize(void* pArg);
@@ -44,7 +45,7 @@ protected:
 	_int				m_iId;
 	_float				m_fCamDistance = 0.f;
 	_bool				m_bHasAuthority = false;
-
+	_bool				m_bDestroy = false;
 protected:
 	HRESULT Add_Component(_uint iLevelIndex, const _tchar* pPrototypeTag, const _tchar* pComponentTag, class CComponent** ppOut, void* pArg = nullptr);
 	HRESULT Compute_CamZ(_fvector vWorldPos);

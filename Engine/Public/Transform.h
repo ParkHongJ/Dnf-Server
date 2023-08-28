@@ -65,6 +65,7 @@ public:
 	void LookAt(_fvector vAt);
 	void LookAt_ForLandObject(_fvector vAt);
 	void Move(_fvector vTargetPos, _float fTimeDelta, _float fLimitDistance = 0.1f);
+	void ReverseScaleX();
 
 private:
 	_float4x4				m_WorldMatrix;

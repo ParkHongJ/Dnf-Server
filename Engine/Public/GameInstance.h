@@ -65,6 +65,9 @@ public: /* For.Input_Device */
 	_char Get_DIMKeyState(DIMK eMouseKeyID);
 	_long Get_DIMMoveState(DIMM eMouseMoveID);
 
+	_bool GetDIKDownState(_uchar eKeyID);
+	_bool GetDIKUPState(_uchar eKeyID);
+
 public: /* For.PipeLine */
 	void Set_Transform(CPipeLine::TRANSFORMSTATE eTransformState, _fmatrix TransformMatrix);
 	_matrix Get_TransformMatrix(CPipeLine::TRANSFORMSTATE eTransformState) const;		

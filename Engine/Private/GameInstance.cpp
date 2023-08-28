@@ -233,6 +233,23 @@ _long CGameInstance::Get_DIMMoveState(DIMM eMouseMoveID)
 	return m_pInput_Device->Get_DIMMoveState(eMouseMoveID);
 }
 
+_bool CGameInstance::GetDIKDownState(_uchar eKeyID)
+{
+	if (nullptr == m_pInput_Device)
+		return 0;
+
+	return m_pInput_Device->GetDIKDownState(eKeyID);
+
+}
+
+_bool CGameInstance::GetDIKUPState(_uchar eKeyID)
+{
+	if (nullptr == m_pInput_Device)
+		return 0;
+
+	return m_pInput_Device->GetDIKUPState(eKeyID);
+}
+
 void CGameInstance::Set_Transform(CPipeLine::TRANSFORMSTATE eTransformState, _fmatrix TransformMatrix)
 {
 	if (nullptr == m_pPipeLine)

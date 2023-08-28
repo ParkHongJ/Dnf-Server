@@ -21,73 +21,62 @@ HRESULT CPlayer::Initialize_Prototype()
 HRESULT CPlayer::Initialize(void * pArg)
 {
 	if (FAILED(Ready_Components()))
-		return E_FAIL;
-
-	m_pModelCom->Set_AnimIndex(3);
-
-	if (FAILED(Ready_Sockets()))
-		return E_FAIL;
-
-	if (FAILED(Ready_PlayerParts()))
-		return E_FAIL;
-
-	
-
-	RELEASE_INSTANCE(CGameInstance);
-	
-
+		return E_FAIL;	
 
 	return S_OK;
 }
 
 void CPlayer::Tick(_float fTimeDelta)
 {
-	if (bLocallyControlled)
+	switch (m_eState)
 	{
-		if (GetAsyncKeyState(VK_DOWN) & 0x8000)
-		{
-			m_pTransformCom->Go_Backward(fTimeDelta);
-		}
-
-		if (GetAsyncKeyState(VK_LEFT) & 0x8000)
-		{
-			m_pTransformCom->Turn(XMVectorSet(0.f, 1.f, 0.f, 0.f), fTimeDelta * -1.f);
-		}
-
-		if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
-		{
-			m_pTransformCom->Turn(XMVectorSet(0.f, 1.f, 0.f, 0.f), fTimeDelta);
-		}
-		if (GetAsyncKeyState(VK_UP) & 0x8000)
-		{
-			m_pTransformCom->Go_Straight(fTimeDelta, m_pNavigationCom);
-			m_pModelCom->Set_AnimIndex(4);
-		}
-		else
-			m_pModelCom->Set_AnimIndex(3);
-
-		elapsedTime += fTimeDelta;
-
-		if (elapsedTime >= packetSendInterval)
-		{
-			// 패킷을 생성하고 서버로 전송하는 코드를 여기에 추가
-			// 예를 들어, 이동 정보를 담은 패킷을 만들고 서버로 전송하는 함수를 호출
-
-			SendMovementPacket(); // 패킷을 전송하는 함수를 호출
-			elapsedTime = 0.0f; // 타이머 초기화
-		}
+	case IDLE:
+		IdleTick(fTimeDelta);
+		break;
+	case WALK:
+		WalkTick(fTimeDelta);
+		break;
+	case RUN:
+		break;
+	default:
+		break;
 	}
 
-	Update_Weapon();
+	HWND focusedWindow = GetFocus();
+	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
 
-	for (auto& pPart : m_Parts)
-		pPart->Tick(fTimeDelta);
-
-	for (auto& pCollider : m_pColliderCom)
+	if (bLocallyControlled && focusedWindow)
 	{
-		if(nullptr != pCollider)
-			pCollider->Update(m_pTransformCom->Get_WorldMatrix());
+		SendMovementPacket(); // 패킷을 전송하는 함수를 호출
+
+		/* 예측 패킷보내기 */
+		//elapsedTime += fTimeDelta;
+
+		//if (elapsedTime >= packetSendInterval)
+		//{
+		//	// 패킷을 생성하고 서버로 전송하는 코드를 여기에 추가
+		//	// 예를 들어, 이동 정보를 담은 패킷을 만들고 서버로 전송하는 함수를 호출
+
+		//	//SendMovementPacket(); // 패킷을 전송하는 함수를 호출
+		//	elapsedTime = 0.0f; // 타이머 초기화
+		//}
 	}
+
+	/*if (bAutoRunning)
+	{
+		_vector vDir = XMLoadFloat3(&vDestPos) - m_pTransformCom->Get_State(CTransform::STATE_POSITION);
+
+		vDir = XMVector3Normalize(vDir);
+
+		_vector vPos = m_pTransformCom->Get_State(CTransform::STATE_POSITION) + vDir * fTimeDelta;
+
+		m_pTransformCom->Set_State(CTransform::STATE_POSITION, XMVectorSetW(vPos, 1.f));
+
+		if (10.f > XMVectorGetX(XMVector3Length(vPos - XMLoadFloat3(&vDestPos))))
+		{
+			bAutoRunning = false;
+		}
+	}*/
 }
 
 void CPlayer::LateTick(_float fTimeDelta)
@@ -95,7 +84,7 @@ void CPlayer::LateTick(_float fTimeDelta)
 	if (nullptr == m_pRendererCom)
 		return;
 
-	m_pModelCom->Play_Animation(fTimeDelta);
+	/*m_pModelCom->Play_Animation(fTimeDelta);
 
 	for (auto& pPart : m_Parts)
 		pPart->LateTick(fTimeDelta);
@@ -111,18 +100,18 @@ void CPlayer::LateTick(_float fTimeDelta)
 			m_pRendererCom->Add_DebugGroup(m_pColliderCom[i]);
 	}
 
-	m_pRendererCom->Add_DebugGroup(m_pNavigationCom);
+	m_pRendererCom->Add_DebugGroup(m_pNavigationCom);*/
+	PlayAnimation(fTimeDelta);
 
-
+	m_pRendererCom->Add_RenderGroup(CRenderer::RENDER_NONALPHABLEND, this);
 }
 
 HRESULT CPlayer::Render()
 {
-	if (nullptr == m_pModelCom ||
-		nullptr == m_pShaderCom)
+	if (nullptr == m_pShaderCom)
 		return E_FAIL;
 
-	CGameInstance*		pGameInstance = GET_INSTANCE(CGameInstance);
+	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
 
 	if (FAILED(m_pShaderCom->Set_RawValue("g_WorldMatrix", &m_pTransformCom->Get_WorldFloat4x4_TP(), sizeof(_float4x4))))
 		return E_FAIL;
@@ -131,24 +120,19 @@ HRESULT CPlayer::Render()
 	if (FAILED(m_pShaderCom->Set_RawValue("g_ProjMatrix", &pGameInstance->Get_TransformFloat4x4_TP(CPipeLine::D3DTS_PROJ), sizeof(_float4x4))))
 		return E_FAIL;
 
+	if (FAILED(pGameInstance->Bind_RenderTargetSRV(TEXT("Target_Depth"), m_pShaderCom, "g_DepthTexture")))
+		return E_FAIL;
+
 	RELEASE_INSTANCE(CGameInstance);
 
+	if (FAILED(m_pTextureCom->Set_SRV(m_pShaderCom, "g_DiffuseTexture", _uint(m_fFrame))))
+		return E_FAIL;
 
+	if (FAILED(m_pShaderCom->Begin(2)))
+		return E_FAIL;
 
-	_uint		iNumMeshes = m_pModelCom->Get_NumMeshes();
-
-	for (_uint i = 0; i < iNumMeshes; ++i)
-	{	
-		if (FAILED(m_pModelCom->SetUp_OnShader(m_pShaderCom, m_pModelCom->Get_MaterialIndex(i), aiTextureType_DIFFUSE, "g_DiffuseTexture")))
-			return E_FAIL;
-		/*if (FAILED(m_pModelCom->SetUp_OnShader(m_pShaderCom, m_pModelCom->Get_MaterialIndex(i), aiTextureType_NORMALS, "g_NormalTexture")))
-			return E_FAIL;*/
-
-
-		if (FAILED(m_pModelCom->Render(m_pShaderCom, i)))
-			return E_FAIL;
-	}	
-
+	if (FAILED(m_pVIBufferCom->Render()))
+		return E_FAIL;
 
 #ifdef _DEBUG
 	/*for (_uint i = 0; i < COLLILDERTYPE_END; ++i)
@@ -181,22 +165,183 @@ void CPlayer::SendMovementPacket()
 
 	packetOffset += sizeof(m_iId);
 
-	_float3 Pos;
-	XMStoreFloat3(&Pos, m_pTransformCom->Get_State(CTransform::STATE_POSITION));
+	memcpy(packet + packetOffset, &m_eState, sizeof(m_eState));
+	
+	packetOffset += sizeof(m_eState);
 
-	memcpy(packet + packetOffset, &Pos.x, sizeof(Pos.x));
+	memcpy(packet + packetOffset, &m_eDir, sizeof(m_eDir));
 
-	packetOffset += sizeof(Pos.x);
+	packetOffset += sizeof(m_eDir);
 
-	memcpy(packet + packetOffset, &Pos.y, sizeof(Pos.y));
+	_float3 vPos;
 
-	packetOffset += sizeof(Pos.y);
+	//_vector vDir = XMVector3Normalize(m_pTransformCom->Get_State(CTransform::STATE_POSITION) - XMLoadFloat3(&vBeforePos));
+	
+	XMStoreFloat3(&vPos, m_pTransformCom->Get_State(CTransform::STATE_POSITION) /*+ vDir * 20.f*/);
 
-	memcpy(packet + packetOffset, &Pos.z, sizeof(Pos.z));
-
-	packetOffset += sizeof(Pos.z);
+	memcpy(packet + packetOffset, &vPos, sizeof(vPos));
 
 	ServerMgr->Send(packet, header.size);
+}
+
+void CPlayer::SetDestination(_fvector vPos, int State, int Dir)
+{
+	UpdateState(STATE(State));
+
+	m_pTransformCom->Set_State(CTransform::STATE_POSITION, XMVectorSetW(vPos, 1.f));
+
+	if (m_eDir != Dir)
+	{
+		m_pTransformCom->ReverseScaleX();
+		m_eDir = (DIR)Dir;
+	}
+}
+
+void CPlayer::PlayAnimation(_float fTimeDelta)
+{
+	m_fFrame += _float(m_eState) * fTimeDelta;
+
+	switch (m_eState)
+	{
+	case IDLE:
+		if (m_fFrame >= 179.f)
+		{
+			m_fFrame = 176.f;
+		}
+		break;
+	case WALK:
+		if (m_fFrame >= 187.f)
+		{
+			m_fFrame = 180.f;
+		}
+		break;
+	case RUN:
+		break;
+	default:
+		break;
+	}
+}
+
+void CPlayer::IdleTick(_float fTimeDelta)
+{
+	HWND focusedWindow = GetFocus();
+	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
+
+	if (bLocallyControlled && focusedWindow)
+	{
+		if (pGameInstance->Get_DIKState(DIK_DOWN) || pGameInstance->Get_DIKState(DIK_UP) || pGameInstance->Get_DIKState(DIK_LEFT) || pGameInstance->Get_DIKState(DIK_RIGHT))
+		{
+			UpdateState(STATE::WALK);
+		}
+	}
+}
+
+void CPlayer::WalkTick(_float fTimeDelta)
+{
+	HWND focusedWindow = GetFocus();
+	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
+
+	if (bLocallyControlled && focusedWindow)
+	{
+		if (pGameInstance->Get_DIKState(DIK_DOWN))
+		{
+			//m_pTransformCom->Go_Backward(fTimeDelta);
+			//m_pTransformCom->Go_Right
+		}
+		else if (pGameInstance->Get_DIKState(DIK_UP))
+		{
+		}
+		else if (pGameInstance->Get_DIKState(DIK_LEFT))
+		{
+			if (m_eDir != DIR::LEFT)
+			{
+				m_pTransformCom->ReverseScaleX();
+				m_eDir = DIR::LEFT;
+			}
+			m_pTransformCom->Go_Left(fTimeDelta);
+
+			XMStoreFloat3(&vBeforePos, m_pTransformCom->Get_State(CTransform::STATE_POSITION));
+		}
+		else if (pGameInstance->Get_DIKState(DIK_RIGHT))
+		{
+			if (m_eDir != DIR::RIGHT)
+			{
+				m_pTransformCom->ReverseScaleX();
+				m_eDir = DIR::RIGHT;
+			}
+			m_pTransformCom->Go_Right(fTimeDelta);
+
+			XMStoreFloat3(&vBeforePos, m_pTransformCom->Get_State(CTransform::STATE_POSITION));
+		}
+		else
+		{
+			UpdateState(STATE::IDLE);
+		}
+	}
+}
+
+void CPlayer::RunTick(_float fTimeDelta)
+{
+	HWND focusedWindow = GetFocus();
+	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
+
+	if (bLocallyControlled && focusedWindow)
+	{
+		if (pGameInstance->Get_DIKState(DIK_DOWN))
+		{
+			
+		}
+		else if (pGameInstance->Get_DIKState(DIK_UP))
+		{
+		}
+		else if (pGameInstance->Get_DIKState(DIK_LEFT))
+		{
+			if (m_eDir != DIR::LEFT)
+			{
+				m_pTransformCom->ReverseScaleX();
+				m_eDir = DIR::LEFT;
+			}
+			m_pTransformCom->Go_Left(fTimeDelta);
+
+			XMStoreFloat3(&vBeforePos, m_pTransformCom->Get_State(CTransform::STATE_POSITION));
+		}
+		else if (pGameInstance->Get_DIKState(DIK_RIGHT))
+		{
+			if (m_eDir != DIR::RIGHT)
+			{
+				m_pTransformCom->ReverseScaleX();
+				m_eDir = DIR::RIGHT;
+			}
+			m_pTransformCom->Go_Right(fTimeDelta);
+
+			XMStoreFloat3(&vBeforePos, m_pTransformCom->Get_State(CTransform::STATE_POSITION));
+		}
+		else
+		{
+			UpdateState(STATE::IDLE);
+		}
+	}
+}
+
+void CPlayer::UpdateState(STATE NewState)
+{
+	if (m_eState != NewState)
+	{
+		switch (NewState)
+		{
+		case IDLE:
+			m_fFrame = _float(ANIM_IDLE);
+			break;
+		case WALK:
+			m_fFrame = _float(ANIM_WALK);
+			break;
+		case RUN:
+			break;
+		default:
+			break;
+		}
+		m_eState = NewState;
+	}
 }
 
 HRESULT CPlayer::Ready_Components()
@@ -205,7 +350,7 @@ HRESULT CPlayer::Ready_Components()
 	CTransform::TRANSFORMDESC		TransformDesc;
 	ZeroMemory(&TransformDesc, sizeof(CTransform::TRANSFORMDESC));
 
-	TransformDesc.fSpeedPerSec = 5.f;
+	TransformDesc.fSpeedPerSec = 1.f;
 	TransformDesc.fRotationPerSec = XMConvertToRadians(90.0f);
 
 	if (FAILED(__super::Add_Component(LEVEL_STATIC, TEXT("Prototype_Component_Transform"), TEXT("Com_Transform"), (CComponent**)&m_pTransformCom, &TransformDesc)))
@@ -216,105 +361,24 @@ HRESULT CPlayer::Ready_Components()
 		return E_FAIL;
 		
 	/* For.Com_Shader */
-	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Shader_AnimModel"), TEXT("Com_Shader"), (CComponent**)&m_pShaderCom)))
+	if (FAILED(__super::Add_Component(LEVEL_STATIC, TEXT("Prototype_Component_Shader_VtxTex"), TEXT("Com_Shader"), (CComponent**)&m_pShaderCom)))
 		return E_FAIL;
 	
-	/* For.Com_Model */
-	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Model_Fiona"), TEXT("Com_Model"), (CComponent**)&m_pModelCom)))
+	/* For.Com_VIBuffer */
+	if (FAILED(__super::Add_Component(LEVEL_STATIC, TEXT("Prototype_Component_VIBuffer_Rect"), TEXT("Com_VIBuffer"), (CComponent**)&m_pVIBufferCom)))
 		return E_FAIL;
 
-
-	/* For.Com_AABB */
-	CCollider::COLLIDERDESC		ColliderDesc;
-	ZeroMemory(&ColliderDesc, sizeof(CCollider::COLLIDERDESC));
-
-	ColliderDesc.vSize = _float3(1.f, 2.f, 1.f);
-	ColliderDesc.vCenter = _float3(0.f, ColliderDesc.vSize.y * 0.5f, 0.f);
-	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Collider_AABB"), TEXT("Com_AABB"), (CComponent**)&m_pColliderCom[COLLIDERTYPE_AABB], &ColliderDesc)))
+	/* For.Com_Texture */
+	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Texture_Player"), TEXT("Com_Texture"), (CComponent**)&m_pTextureCom)))
 		return E_FAIL;
 
-	/* For.Com_OBB */	
-	ZeroMemory(&ColliderDesc, sizeof(CCollider::COLLIDERDESC));
-
-	ColliderDesc.vSize = _float3(1.3f, 1.3f, 1.3f);
-	ColliderDesc.vCenter = _float3(0.f, ColliderDesc.vSize.y * 0.5f, 0.f);
-	ColliderDesc.vRotation = _float3(0.f, XMConvertToRadians(45.f), 0.f);
-	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Collider_OBB"), TEXT("Com_OBB"), (CComponent**)&m_pColliderCom[COLLIDERTYPE_OBB], &ColliderDesc)))
-		return E_FAIL;
-
-	/* For.Com_SPHERE */
-	ZeroMemory(&ColliderDesc, sizeof(CCollider::COLLIDERDESC));
-
-	ColliderDesc.vSize = _float3(1.f, 1.f, 1.f);
-	ColliderDesc.vCenter = _float3(0.f, ColliderDesc.vSize.y * 0.5f, 0.f);
-	ColliderDesc.vRotation = _float3(0.f, XMConvertToRadians(45.f), 0.f);
-	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Collider_Sphere"), TEXT("Com_SPHERE"), (CComponent**)&m_pColliderCom[COLLIDERTYPE_SPHERE], &ColliderDesc)))
-		return E_FAIL;
-
-	/* For.Com_Navigation */
-	CNavigation::NAVIGATIONDESC			NaviDesc;
-	ZeroMemory(&NaviDesc, sizeof(CNavigation::NAVIGATIONDESC));
-	NaviDesc.iCurrentIndex = 0;
-
-	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Navigation"), TEXT("Com_Navigation"), (CComponent**)&m_pNavigationCom, &NaviDesc)))
-		return E_FAIL;
-
-
-	return S_OK;
-}
-
-HRESULT CPlayer::Ready_Sockets()
-{
-	if (nullptr == m_pModelCom)
-		return E_FAIL;
-
-	CHierarchyNode*		pWeaponSocket = m_pModelCom->Get_HierarchyNode("SWORD");
-	if (nullptr == pWeaponSocket)
-		return E_FAIL;
-
-	m_Sockets.push_back(pWeaponSocket);
-
-	return S_OK;
-}
-
-HRESULT CPlayer::Ready_PlayerParts()
-{
-	CGameInstance*		pGameInstance = GET_INSTANCE(CGameInstance);
-
-	/* For.Sword */
-	CGameObject*		pGameObject = pGameInstance->Clone_GameObject(TEXT("Prototype_GameObject_Sword"));
-
-	if (nullptr == pGameObject)
-		return E_FAIL;
-
-	m_Parts.push_back(pGameObject);
-
-	return S_OK;
-}
-
-HRESULT CPlayer::Update_Weapon()
-{
-	if (nullptr == m_Sockets[PART_WEAPON])
-		return E_FAIL;
-
-	/* 행렬. */
-	/*_matrix			WeaponMatrix = 뼈의 스페이스 변환(OffsetMatrix)
-		* 뼈의 행렬(CombinedTransformation) 
-		* 모델의 PivotMatrix * 프렐이어의월드행렬. ;*/
-
-	_matrix WeaponMatrix = m_Sockets[PART_WEAPON]->Get_OffSetMatrix()
-			* m_Sockets[PART_WEAPON]->Get_CombinedTransformation()
-			* m_pModelCom->Get_PivotMatrix() 
-			* m_pTransformCom->Get_WorldMatrix();
-
-	m_Parts[PART_WEAPON]->SetUp_State(WeaponMatrix);
 
 	return S_OK;
 }
 
 CPlayer * CPlayer::Create(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 {
-	CPlayer*		pInstance = new CPlayer(pDevice, pContext);
+	CPlayer* pInstance = new CPlayer(pDevice, pContext);
 
 	if (FAILED(pInstance->Initialize_Prototype()))
 	{
@@ -327,7 +391,7 @@ CPlayer * CPlayer::Create(ID3D11Device * pDevice, ID3D11DeviceContext * pContext
 
 CGameObject * CPlayer::Clone(void * pArg)
 {
-	CPlayer*		pInstance = new CPlayer(*this);
+	CPlayer* pInstance = new CPlayer(*this);
 
 	if (FAILED(pInstance->Initialize(pArg)))
 	{
@@ -342,17 +406,8 @@ void CPlayer::Free()
 {
 	__super::Free();
 
-	for (auto& pPart : m_Parts)
-		Safe_Release(pPart);
-
-	m_Parts.clear();
-
-	for (auto& pCollider : m_pColliderCom)
-		Safe_Release(pCollider);
-
-
-	Safe_Release(m_pNavigationCom);
-	Safe_Release(m_pModelCom);
+	Safe_Release(m_pTextureCom);
+	Safe_Release(m_pVIBufferCom);
 	Safe_Release(m_pShaderCom);
 	Safe_Release(m_pRendererCom);
 	Safe_Release(m_pTransformCom);

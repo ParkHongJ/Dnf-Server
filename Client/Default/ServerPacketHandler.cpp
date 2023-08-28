@@ -126,8 +126,22 @@ bool Handle_S_MOVE(SOCKET socket, BYTE* buffer)
 
 	bufferOffset += sizeof(int);
 
+	int State;
+	memcpy(&State, buffer + bufferOffset, sizeof(State));
+
+	bufferOffset += sizeof(State);
+
+	int Dir;
+	memcpy(&Dir, buffer + bufferOffset, sizeof(Dir));
+
+	bufferOffset += sizeof(Dir);
+
 	_float3 Pos;
 	memcpy(&Pos.x, buffer + bufferOffset, sizeof(Pos));
+
+	bufferOffset += sizeof(Pos);
+
+	
 
 	ServerManager* ServerMgr = ServerManager::GetInstance();
 
@@ -135,13 +149,33 @@ bool Handle_S_MOVE(SOCKET socket, BYTE* buffer)
 
 	if (pObject)
 	{
-		CTransform* pTransform = (CTransform*)pObject->Get_ComponentPtr(TEXT("Com_Transform"));
+		if (CPlayer* player = dynamic_cast<CPlayer*>(pObject))
+		{
+			player->SetDestination(XMLoadFloat3(&Pos), State, Dir);
+		}
+		/*CTransform* pTransform = (CTransform*)pObject->Get_ComponentPtr(TEXT("Com_Transform"));
 		
 		if (pTransform)
 		{
 			pTransform->Set_State(CTransform::STATE_POSITION, XMVectorSetW(XMLoadFloat3(&Pos), 1.f));
-		}
+		}*/
 	}
 
+	return true;
+}
+
+bool Handle_S_EXIT(SOCKET socket, BYTE* buffer)
+{
+	int id;
+
+	int bufferOffset = sizeof(PacketHeader);
+	memcpy(&id, buffer + bufferOffset, sizeof(int));
+
+	bufferOffset += sizeof(int);
+
+	ServerManager* ServerMgr = ServerManager::GetInstance();
+
+	ServerMgr->DestroyObjectById(id);
+	
 	return true;
 }

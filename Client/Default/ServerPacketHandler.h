@@ -12,6 +12,7 @@ bool Handle_S_LOGIN(SOCKET socket, BYTE* buffer);
 bool Handle_S_ENTER_GAME(SOCKET socket, BYTE* buffer);
 bool Handle_S_CREATE_PLAYER(SOCKET socket, BYTE* buffer);
 bool Handle_S_MOVE(SOCKET socket, BYTE* buffer);
+bool Handle_S_EXIT(SOCKET socket, BYTE* buffer);
 
 class ServerPacketHandler
 {
@@ -39,6 +40,10 @@ public:
         GPacketHandler[PKT_S_MOVE] = [](SOCKET socket, BYTE* buffer, INT32 len)
         {
             return Handle_S_MOVE(socket, buffer);
+        };
+        GPacketHandler[PKT_S_EXIT] = [](SOCKET socket, BYTE* buffer, INT32 len)
+        {
+            return Handle_S_EXIT(socket, buffer);
         };
     }
     static bool HandlePacket(SOCKET socket, BYTE* buffer, INT32 len);

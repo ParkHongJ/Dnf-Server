@@ -10,6 +10,14 @@ RasterizerState RS_Skybox
 	FrontCounterClockwise = false;
 };
 
+RasterizerState RS_DNF
+{
+	FillMode = solid;
+
+	/* 앞면을 컬링하겠다. == 후면을 보여주겠다. */
+	CullMode = None;
+
+};
 
 RasterizerState RS_Default
 {

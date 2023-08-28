@@ -4,6 +4,8 @@
 #include <thread>
 #include <queue>
 #include <mutex>
+#include <list>
+#include <unordered_map>
 #define PACKET_SIZE 512
 #define PORT 7778
 
@@ -13,6 +15,12 @@ struct Player {
     SOCKET socket;
     unsigned int PlayerId;
     float x, y, z;
+
+    float vRight[3];
+    float vUp[3];
+    float vLook[3];
+
+    float vPos[3];
 };
 struct PacketHeader
 {
@@ -43,6 +51,36 @@ int g_ObjectId = 0;
 mutex g_lock;
 
 vector<Player> Clients;
+
+enum COLLISIONGROUP
+{
+    COLLISION_PLAYER,
+    COLLISION_MONSTER, //임시
+    COLLISION_GROUP_MAX
+};
+
+list<Collider> CollisionObjects[COLLISION_GROUP_MAX];
+
+union COLLIDER_ID
+{
+    struct {
+        unsigned int Left_ID;
+        unsigned int Right_ID;
+    };
+    LONGLONG ID;
+};
+
+struct Collider {
+    
+    //주인의 ID
+    int OwnerId;
+    //자신의 ID
+    int ColliderId;
+
+    //누구랑 충돌이 가능한지?
+    list<COLLISIONGROUP> OtherGroup;
+};
+unordered_map<LONGLONG, bool> m_ColInfo;
 int main()
 {
     WSADATA wsaData; 
@@ -59,11 +97,72 @@ int main()
     bind(hListen, (SOCKADDR*)&ListenAddr, sizeof(ListenAddr));
     listen(hListen, SOMAXCONN);
 
-
     queue<BYTE*> Packets;
 
     //g_ObjectInfo.resize(PP_END);
-   // thread collisionThread(Collision_AABB);
+    thread collisionThread([=]() {
+        while (true)
+        {
+            //충돌검사
+            unordered_map<LONGLONG, bool>::iterator iter;
+
+            for (size_t SourceGroup = COLLISION_PLAYER; SourceGroup < COLLISION_GROUP_MAX; SourceGroup++)
+            {
+                for (size_t DestGroup = COLLISION_PLAYER; DestGroup < COLLISION_GROUP_MAX; DestGroup++)
+                {
+                    if (SourceGroup == DestGroup)
+                        continue;
+
+                    for (Collider& Sour : CollisionObjects[SourceGroup])
+                    {
+                        for (Collider& Dest : CollisionObjects[DestGroup])
+                        {
+                            if (Dest.ColliderId == Sour.ColliderId)
+                                continue;
+
+                            COLLIDER_ID ID;
+                            ID.Left_ID = Sour.ColliderId;
+                            ID.Right_ID = Dest.ColliderId;
+                            iter = m_ColInfo.find(ID.ID);
+
+                            if (m_ColInfo.end() == iter)
+                            {
+                                m_ColInfo.insert(make_pair(ID.ID, false));
+                                iter = m_ColInfo.find(ID.ID);
+                            }
+
+                            //if (pSour.first->GetOwner()->GetEnabled() && pDest.first->GetOwner()->GetEnabled())
+                            //{
+                                //if (Check_SphereEx(pSour.first, pSour.second, pDest.first, pDest.second))
+                                //{
+                                //    if (iter->second)
+                                //    {
+                                //        //pSour.first->GetOwner()->OnTriggerStay(pDest.first->GetOwner(), fTimeDelta, DIR_END);
+                                //        //pDest.first->GetOwner()->OnTriggerStay(pSour.first->GetOwner(), fTimeDelta, DIR_END);
+                                //    }
+                                //    else
+                                //    {
+                                //        //pSour.first->GetOwner()->OnTriggerEnter(pDest.first->GetOwner(), fTimeDelta);
+                                //        //pDest.first->GetOwner()->OnTriggerEnter(pSour.first->GetOwner(), fTimeDelta);
+                                //        iter->second = true;
+                                //    }
+                                //}
+                                //else
+                                //{
+                                //    if (iter->second)
+                                //    {
+                                //        //pSour.first->GetOwner()->OnTriggerExit(pDest.first->GetOwner(), fTimeDelta);
+                                //        //pDest.first->GetOwner()->OnTriggerExit(pSour.first->GetOwner(), fTimeDelta);
+                                //        iter->second = false;
+                                //    }
+                                //}
+                            //}
+                        }
+                    }
+                }
+            }
+        }
+        });
 
     vector<thread> ClientThread;
     while (true)
@@ -149,7 +248,6 @@ int main()
                                 }
                             }
                         }
-
 
                         send(hClient, (const char*)packet, PACKET_SIZE, 0);
                     }
@@ -242,19 +340,37 @@ int main()
                         header.size = PACKET_SIZE;
                         (*(PacketHeader*)packet) = header;
 
-                        send(hClient, (const char*)packet, PACKET_SIZE, 0);
                         bThreadLoop = false;
                         cout << "클라이언트 종료" << endl;
 
+                        int id = 0;
+
+                        int iIndex = 0;
                         {
                             lock_guard<mutex> lockguard(g_lock);
-                            for (auto& Client : Clients)
+                            for (auto& user : Clients)
                             {
-                                /*if (Client == hClient)
+                                if (user.socket == hClient)
                                 {
-
-                                }*/
+                                    id = user.PlayerId;
+                                    break;
+                                }
+                                iIndex++;
                             }
+                        }
+
+                        memcpy(packet + sizeof(PacketHeader), &id, sizeof(id));
+
+                        {
+                            lock_guard<mutex> lockguard(g_lock);
+                            for (auto& user : Clients)
+                            {
+                                if (user.socket != hClient)
+                                {
+                                    send(user.socket, (const char*)packet, PACKET_SIZE, 0);
+                                }
+                            }
+                            Clients.erase(Clients.begin() + iIndex);
                         }
                         break;
                     }

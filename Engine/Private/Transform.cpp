@@ -74,7 +74,7 @@ void CTransform::Go_Left(_float fTimeDelta)
 	_vector		vPosition = Get_State(CTransform::STATE_POSITION);
 	_vector		vRight = Get_State(CTransform::STATE_RIGHT);
 
-	vPosition -= XMVector3Normalize(vRight) * m_TransformDesc.fSpeedPerSec * fTimeDelta;
+	vPosition += XMVectorSet(-1.f,0.f,0.f,0.f) * m_TransformDesc.fSpeedPerSec * fTimeDelta;
 
 	Set_State(CTransform::STATE_POSITION, vPosition);
 }
@@ -84,7 +84,7 @@ void CTransform::Go_Right(_float fTimeDelta)
 	_vector		vPosition = Get_State(CTransform::STATE_POSITION);
 	_vector		vRight = Get_State(CTransform::STATE_RIGHT);
 
-	vPosition += XMVector3Normalize(vRight) * m_TransformDesc.fSpeedPerSec * fTimeDelta;
+	vPosition += XMVectorSet(1.f, 0.f, 0.f, 0.f) * m_TransformDesc.fSpeedPerSec * fTimeDelta;
 
 	Set_State(CTransform::STATE_POSITION, vPosition);
 }
@@ -172,6 +172,14 @@ void CTransform::Move(_fvector vTargetPos, _float fTimeDelta, _float fLimitDista
 		vPosition += XMVector3Normalize(vDirection) * m_TransformDesc.fSpeedPerSec * fTimeDelta;
 
 	Set_State(CTransform::STATE_POSITION, vPosition);
+}
+
+void CTransform::ReverseScaleX()
+{
+	_float3 vScale = Get_Scale();
+	vScale.x *= -1.f;
+
+	Set_Scale(XMLoadFloat3(&vScale));
 }
 
 CTransform * CTransform::Create(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)

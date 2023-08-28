@@ -51,6 +51,7 @@ public:
 	void Send(BYTE* buffer, INT32 len);
 	void SetClientId(int id) { ClientId = id; }
 	int GetClientId() { return ClientId; }
+	void DestroyObjectById(int id);
 private:
 	mutex lock;
 	queue<BYTE*> PacketQueue;

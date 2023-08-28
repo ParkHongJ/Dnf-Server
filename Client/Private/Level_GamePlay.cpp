@@ -31,8 +31,8 @@ HRESULT CLevel_GamePlay::Initialize()
 	/*if (FAILED(Ready_Layer_Monster(TEXT("Layer_Monster"))))
 		return E_FAIL;*/
 
-	if (FAILED(Ready_Layer_Effect(TEXT("Layer_Effect"))))
-		return E_FAIL;
+	/*if (FAILED(Ready_Layer_Effect(TEXT("Layer_Effect"))))
+		return E_FAIL;*/
 
 	if (FAILED(Ready_Layer_UI(TEXT("Layer_UI"))))
 		return E_FAIL;
@@ -120,7 +120,7 @@ HRESULT CLevel_GamePlay::Ready_Layer_Camera(const _tchar * pLayerTag)
 
 	CCamera::CAMERADESC			CameraDesc;
 
-	CameraDesc.vEye = _float4(0.f, 10.f, -10.f, 1.f);
+	CameraDesc.vEye = _float4(0.f, 0.f, -10.f, 1.f);
 	CameraDesc.vAt = _float4(0.f, 0.f, 0.f, 1.f);
 	CameraDesc.fFovy = XMConvertToRadians(60.0f);
 	CameraDesc.fAspect = (_float)g_iWinSizeX / g_iWinSizeY;
@@ -162,7 +162,7 @@ HRESULT CLevel_GamePlay::Ready_Layer_BackGround(const _tchar * pLayerTag)
 	pGameInstance->Add_GameObjectToLayer(TEXT("Prototype_GameObject_Sky"), LEVEL_GAMEPLAY, pLayerTag);
 	
 
-	pGameInstance->Add_GameObjectToLayer(TEXT("Prototype_GameObject_ForkLift"), LEVEL_GAMEPLAY, pLayerTag);
+	//pGameInstance->Add_GameObjectToLayer(TEXT("Prototype_GameObject_ForkLift"), LEVEL_GAMEPLAY, pLayerTag);
 
 
 	Safe_Release(pGameInstance);

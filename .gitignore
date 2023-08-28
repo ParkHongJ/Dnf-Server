@@ -369,6 +369,7 @@ Client/Bin/Resources/*.*
 Client/Bin/Resources/Meshes
 Client/Bin/Resources/Models
 Client/Bin/Resources/Sound
+Client/Bin/Resources/Sounds
 Client/Bin/Resources/Textures
 Client/Bin/Resources/Fonts
 Engine/ThirdPartyLib/*.*
