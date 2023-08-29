@@ -6,6 +6,7 @@
 #include <mutex>
 #include <list>
 #include <unordered_map>
+#include <set>
 #define PACKET_SIZE 512
 #define PORT 7778
 
@@ -59,7 +60,6 @@ enum COLLISIONGROUP
     COLLISION_GROUP_MAX
 };
 
-list<Collider> CollisionObjects[COLLISION_GROUP_MAX];
 
 union COLLIDER_ID
 {
@@ -70,17 +70,16 @@ union COLLIDER_ID
     LONGLONG ID;
 };
 
-struct Collider {
-    
+struct Collider 
+{
     //주인의 ID
     int OwnerId;
     //자신의 ID
     int ColliderId;
 
-    //누구랑 충돌이 가능한지?
-    list<COLLISIONGROUP> OtherGroup;
 };
 unordered_map<LONGLONG, bool> m_ColInfo;
+
 int main()
 {
     WSADATA wsaData; 
@@ -99,71 +98,6 @@ int main()
 
     queue<BYTE*> Packets;
 
-    //g_ObjectInfo.resize(PP_END);
-    thread collisionThread([=]() {
-        while (true)
-        {
-            //충돌검사
-            unordered_map<LONGLONG, bool>::iterator iter;
-
-            for (size_t SourceGroup = COLLISION_PLAYER; SourceGroup < COLLISION_GROUP_MAX; SourceGroup++)
-            {
-                for (size_t DestGroup = COLLISION_PLAYER; DestGroup < COLLISION_GROUP_MAX; DestGroup++)
-                {
-                    if (SourceGroup == DestGroup)
-                        continue;
-
-                    for (Collider& Sour : CollisionObjects[SourceGroup])
-                    {
-                        for (Collider& Dest : CollisionObjects[DestGroup])
-                        {
-                            if (Dest.ColliderId == Sour.ColliderId)
-                                continue;
-
-                            COLLIDER_ID ID;
-                            ID.Left_ID = Sour.ColliderId;
-                            ID.Right_ID = Dest.ColliderId;
-                            iter = m_ColInfo.find(ID.ID);
-
-                            if (m_ColInfo.end() == iter)
-                            {
-                                m_ColInfo.insert(make_pair(ID.ID, false));
-                                iter = m_ColInfo.find(ID.ID);
-                            }
-
-                            //if (pSour.first->GetOwner()->GetEnabled() && pDest.first->GetOwner()->GetEnabled())
-                            //{
-                                //if (Check_SphereEx(pSour.first, pSour.second, pDest.first, pDest.second))
-                                //{
-                                //    if (iter->second)
-                                //    {
-                                //        //pSour.first->GetOwner()->OnTriggerStay(pDest.first->GetOwner(), fTimeDelta, DIR_END);
-                                //        //pDest.first->GetOwner()->OnTriggerStay(pSour.first->GetOwner(), fTimeDelta, DIR_END);
-                                //    }
-                                //    else
-                                //    {
-                                //        //pSour.first->GetOwner()->OnTriggerEnter(pDest.first->GetOwner(), fTimeDelta);
-                                //        //pDest.first->GetOwner()->OnTriggerEnter(pSour.first->GetOwner(), fTimeDelta);
-                                //        iter->second = true;
-                                //    }
-                                //}
-                                //else
-                                //{
-                                //    if (iter->second)
-                                //    {
-                                //        //pSour.first->GetOwner()->OnTriggerExit(pDest.first->GetOwner(), fTimeDelta);
-                                //        //pDest.first->GetOwner()->OnTriggerExit(pSour.first->GetOwner(), fTimeDelta);
-                                //        iter->second = false;
-                                //    }
-                                //}
-                            //}
-                        }
-                    }
-                }
-            }
-        }
-        });
-
     vector<thread> ClientThread;
     while (true)
     {
@@ -177,26 +111,7 @@ int main()
             cout << "Accept Error : " << error << endl;
             continue;
         }
-        cout << "클라이언트 연결 완료" << "\n";
-
-        BYTE packet[PACKET_SIZE] = "";
-
-        PacketHeader header;
-        
-        header.protocol = PKT_S_LOGIN;
-        header.size = PACKET_SIZE;
-        (*(PacketHeader*)packet) = header;
-
-        Player player;
-
-        player.PlayerId = g_ObjectId++;
-        player.socket = hClient;
-
-        memcpy(packet + sizeof(PacketHeader), &player.PlayerId, sizeof(player.PlayerId));
-
-        send(hClient, (const char*)packet, PACKET_SIZE, 0);
-
-        Clients.push_back(player);
+        cout << "클라이언트 연결 완료" << "\n";   
 
         thread WorkerThread = thread([=]()
             {
@@ -211,7 +126,26 @@ int main()
                     {
                     case PKT_C_LOGIN:
                     {
+                        BYTE packet[PACKET_SIZE] = "";
 
+                        PacketHeader header;
+
+                        header.protocol = PKT_S_LOGIN;
+                        header.size = PACKET_SIZE;
+                        (*(PacketHeader*)packet) = header;
+
+                        Player player;
+
+                        player.socket = hClient;
+                        {
+                            lock_guard<mutex> lockguard(g_lock);
+                            player.PlayerId = g_ObjectId++;
+                            Clients.push_back(player);
+                        }
+
+                        memcpy(packet + sizeof(PacketHeader), &player.PlayerId, sizeof(player.PlayerId));
+
+                        send(hClient, (const char*)packet, PACKET_SIZE, 0);
                     }
                     break;
                     case PKT_C_ENTER_GAME:
@@ -374,24 +308,16 @@ int main()
                         }
                         break;
                     }
-                    default:
-                        break;
                     }
                 }
             });
-        //WorkerThread.detach();
         ClientThread.push_back(std::move(WorkerThread));
     }
 
-
-    // if (collisionThread.joinable())
-    //    collisionThread.join();
     for (thread& Client : ClientThread)
     {
         if (Client.joinable())
-        {
             Client.join();
-        }
     }
 
     closesocket(hListen);

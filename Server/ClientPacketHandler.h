@@ -10,7 +10,7 @@ bool Handle_S_ENTER_GAME(SOCKET socket, BYTE* buffer);
 bool Handle_S_CREATE_PLAYER(SOCKET socket, BYTE* buffer);
 bool Handle_S_MOVE(SOCKET socket, BYTE* buffer);
 
-class ServerPacketHandler
+class ClientPacketHandler
 {
 
 public:

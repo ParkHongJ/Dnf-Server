@@ -245,11 +245,21 @@ void CPlayer::WalkTick(_float fTimeDelta)
 	{
 		if (pGameInstance->Get_DIKState(DIK_DOWN))
 		{
-			//m_pTransformCom->Go_Backward(fTimeDelta);
-			//m_pTransformCom->Go_Right
+			_vector vPos = m_pTransformCom->Get_State(CTransform::STATE_POSITION);
+			_float AddY = XMVectorGetY(vPos) - fTimeDelta;
+			_float AddZ = XMVectorGetZ(vPos) - fTimeDelta;
+			vPos = XMVectorSetY(vPos, AddY);
+			vPos = XMVectorSetZ(vPos, AddZ);
+			m_pTransformCom->Set_State(CTransform::STATE_POSITION, XMVectorSetW(vPos, 1.f));
 		}
 		else if (pGameInstance->Get_DIKState(DIK_UP))
 		{
+			_vector vPos = m_pTransformCom->Get_State(CTransform::STATE_POSITION);
+			_float AddY = XMVectorGetY(vPos) + fTimeDelta;
+			_float AddZ = XMVectorGetZ(vPos) + fTimeDelta;
+			vPos = XMVectorSetY(vPos, AddY);
+			vPos = XMVectorSetZ(vPos, AddZ);
+			m_pTransformCom->Set_State(CTransform::STATE_POSITION, XMVectorSetW(vPos, 1.f));
 		}
 		else if (pGameInstance->Get_DIKState(DIK_LEFT))
 		{

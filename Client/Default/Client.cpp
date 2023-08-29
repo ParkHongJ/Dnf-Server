@@ -101,6 +101,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		cout << "Error" << endl;
 	}
 
+    BYTE packet[PACKET_SIZE] = "";
+
+    PacketHeader header;
+
+    header.protocol = PKT_C_LOGIN;
+    header.size = PACKET_SIZE;
+    (*(PacketHeader*)packet) = header;
+
+    send(clientSocket, (const char*)packet, PACKET_SIZE, 0);
+
     bool g_ThreadLoop = true;
     
     ServerPacketHandler::Init();

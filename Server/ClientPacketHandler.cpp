@@ -1,8 +1,8 @@
-#include "ClientPacketHandelr.h"
+#include "ClientPacketHandler.h"
 
 PacketHandlerFunc GPacketHandler[UINT16_MAX];
 
-bool ServerPacketHandler::HandlePacket(SOCKET socket, BYTE* buffer, INT32 len)
+bool ClientPacketHandler::HandlePacket(SOCKET socket, BYTE* buffer, INT32 len)
 {
 	PacketHeader* header = (PacketHeader*)buffer;
 

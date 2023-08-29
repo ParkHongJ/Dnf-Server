@@ -2,8 +2,23 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ClientPacketHandelr.cpp">
+    <ClCompile Include="ClientPacketHandler.cpp">
       <Filter>ClientPacketHandler</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionThread.cpp">
+      <Filter>Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="DnfServer.cpp">
+      <Filter>ServerCore</Filter>
+    </ClCompile>
+    <ClCompile Include="NetAddress.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Listener.cpp">
+      <Filter>Network\Listener</Filter>
+    </ClCompile>
+    <ClCompile Include="Session.cpp">
+      <Filter>Network\Session</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -19,16 +34,49 @@
     <Filter Include="Util">
       <UniqueIdentifier>{ec26388f-1315-4cbc-85ae-babbe9e9c584}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Collision">
+      <UniqueIdentifier>{3698c8a6-b903-412e-9f7b-d1a149f6ba49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{d058bef5-e678-401b-b95a-cb481ff7d2be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\Listener">
+      <UniqueIdentifier>{9f9ef6ca-e6cb-46ed-882a-f1cf03d71b01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Contents">
+      <UniqueIdentifier>{a0624923-ce79-4dcc-bbf1-6fbe0fee2e8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\Session">
+      <UniqueIdentifier>{b200dafa-a00b-4139-8728-2ce6d9751928}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Packet.h">
       <Filter>Packet</Filter>
     </ClInclude>
-    <ClInclude Include="ClientPacketHandelr.h">
+    <ClInclude Include="ClientPacketHandler.h">
       <Filter>ClientPacketHandler</Filter>
     </ClInclude>
     <ClInclude Include="Server_Defines.h">
       <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="CollisionThread.h">
+      <Filter>Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="DnfServer.h">
+      <Filter>ServerCore</Filter>
+    </ClInclude>
+    <ClInclude Include="NetAddress.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Listener.h">
+      <Filter>Network\Listener</Filter>
+    </ClInclude>
+    <ClInclude Include="Session.h">
+      <Filter>Network\Session</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -2,7 +2,19 @@
 #include <winsock2.h>
 #include <stdint.h>
 #include <functional>
+#include <string>
+#include <ws2tcpip.h>
+#include <iostream>
+#include <thread>
+#include <unordered_map>
+#include <mutex>
+#include <set>
 #include "Packet.h"
+#include "Types.h"
+
+#define PACKET_SIZE 512
+
+using namespace std;
 
 struct PacketHeader
 {

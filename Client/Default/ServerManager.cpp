@@ -11,8 +11,10 @@ void ServerManager::AddPacket(BYTE* Packet)
 	BYTE* Data = new BYTE[header->size];
 	memcpy(Data, Packet, header->size);
 	
-	lock_guard<mutex> lock_guard(lock);
-	PacketQueue.push(Data);
+	{
+		lock_guard<mutex> lock_guard(lock);
+		PacketQueue.push(Data);
+	}
 }
 
 HANDLE ServerManager::ProcessPacket()

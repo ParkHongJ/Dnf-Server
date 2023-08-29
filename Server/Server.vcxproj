@@ -156,13 +156,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ClientPacketHandelr.cpp" />
+    <ClCompile Include="ClientPacketHandler.cpp" />
+    <ClCompile Include="CollisionThread.cpp" />
+    <ClCompile Include="DnfServer.cpp" />
+    <ClCompile Include="Listener.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="NetAddress.cpp" />
+    <ClCompile Include="Session.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClientPacketHandelr.h" />
+    <ClInclude Include="ClientPacketHandler.h" />
+    <ClInclude Include="CollisionThread.h" />
+    <ClInclude Include="DnfServer.h" />
+    <ClInclude Include="Listener.h" />
+    <ClInclude Include="NetAddress.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="Server_Defines.h" />
+    <ClInclude Include="Session.h" />
+    <ClInclude Include="Types.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
