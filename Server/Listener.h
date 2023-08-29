@@ -4,8 +4,7 @@
 class Listener
 {
 public:
-	/* 외부에서 사용 */
-	
+	/* 외부에서 사용 */	
 	bool StartAccept(NetAddress netAddress);
 	void CloseSocket();
 

@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <mutex>
 #include <set>
+#include <atomic>
+#include <map>
 #include "Packet.h"
 #include "Types.h"
 

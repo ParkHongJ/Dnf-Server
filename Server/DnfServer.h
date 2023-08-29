@@ -13,6 +13,7 @@ public:
 	void AddSession(Session* session);
 	void ReleaseSession(Session* session);
 
+	void ReleaseWorkerThread();
 private:
 	mutex lock;
 

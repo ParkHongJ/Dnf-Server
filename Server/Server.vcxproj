@@ -162,6 +162,8 @@
     <ClCompile Include="Listener.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetAddress.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Room.cpp" />
     <ClCompile Include="Session.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -171,6 +173,8 @@
     <ClInclude Include="Listener.h" />
     <ClInclude Include="NetAddress.h" />
     <ClInclude Include="Packet.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="Room.h" />
     <ClInclude Include="Server_Defines.h" />
     <ClInclude Include="Session.h" />
     <ClInclude Include="Types.h" />

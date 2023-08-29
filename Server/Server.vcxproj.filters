@@ -20,6 +20,12 @@
     <ClCompile Include="Session.cpp">
       <Filter>Network\Session</Filter>
     </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Contents\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Room.cpp">
+      <Filter>Contents\Room</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ServerCore">
@@ -49,6 +55,12 @@
     <Filter Include="Network\Session">
       <UniqueIdentifier>{b200dafa-a00b-4139-8728-2ce6d9751928}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Contents\Room">
+      <UniqueIdentifier>{d62f9d38-3125-4963-80b9-37d89fc00f8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Contents\Player">
+      <UniqueIdentifier>{ac2fa34a-f2bc-41b1-b0e2-e254df24419e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Packet.h">
@@ -77,6 +89,12 @@
     </ClInclude>
     <ClInclude Include="Session.h">
       <Filter>Network\Session</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Contents\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Room.h">
+      <Filter>Contents\Room</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -46,9 +46,10 @@ HRESULT CLevel_GamePlay::Initialize()
 	header.size = PACKET_SIZE;
 
 	*(PacketHeader*)packet = header;
-	int id = ServerMgr->GetClientId();
+	_int characterIndex = 0;
+	//int id = ServerMgr->GetClientId();
 
-	memcpy(packet + sizeof(PacketHeader), &id, sizeof(id));
+	memcpy(packet + sizeof(PacketHeader), &characterIndex, sizeof(characterIndex));
 	ServerMgr->Send(packet, header.size);
 
 	return S_OK;

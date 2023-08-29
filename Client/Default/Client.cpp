@@ -30,19 +30,19 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR    lpCmdLine,
+    _In_ int       nCmdShow)
 {
 #ifdef _DEBUG
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif // _DEBUG
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: 여기에 코드를 입력합니다.
-	CMainApp*			pMainApp = nullptr;
+    CMainApp* pMainApp = nullptr;
 
     // 전역 문자열을 초기화합니다.
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -50,7 +50,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MyRegisterClass(hInstance);
 
     // 응용 프로그램 초기화를 수행합니다.
-    if (!InitInstance (hInstance, nCmdShow))
+    if (!InitInstance(hInstance, nCmdShow))
     {
         return FALSE;
     }
@@ -59,19 +59,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
-	pMainApp = CMainApp::Create();
-	if (nullptr == pMainApp)
-		return FALSE;
+    pMainApp = CMainApp::Create();
+    if (nullptr == pMainApp)
+        return FALSE;
 
 
-	CGameInstance*		pGameInstance = GET_INSTANCE(CGameInstance);
-    
-	if (FAILED(pGameInstance->Add_Timer(TEXT("Timer_Default"))))
-		return FALSE;
-	if (FAILED(pGameInstance->Add_Timer(TEXT("Timer_60"))))
-		return FALSE;
+    CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
 
-	_float		fTimeAcc = 0.f;
+    if (FAILED(pGameInstance->Add_Timer(TEXT("Timer_Default"))))
+        return FALSE;
+    if (FAILED(pGameInstance->Add_Timer(TEXT("Timer_60"))))
+        return FALSE;
+
+    _float		fTimeAcc = 0.f;
 
 
     WSADATA wsaData;
@@ -81,7 +81,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) // Winsock을초기화합니다.
     {
-       // ShowErrorMessage("WSAStartup()");
+        // ShowErrorMessage("WSAStartup()");
         int a = 10;
     }
     clientSocket = socket(PF_INET, SOCK_STREAM, 0); // TCP 소켓을생성합니다.
@@ -92,31 +92,31 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
     memset(&serverAddress, 0, sizeof(serverAddress));
     serverAddress.sin_family = AF_INET;
-	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // 문자열IP를네트워크바이트형식으로
-	serverAddress.sin_port = htons(serverPort); // 2바이트정수네트워크바이트형식으로
+    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // 문자열IP를네트워크바이트형식으로
+    serverAddress.sin_port = htons(serverPort); // 2바이트정수네트워크바이트형식으로
 
-	if (connect(clientSocket, (SOCKADDR*)&serverAddress, sizeof(serverAddress)) == SOCKET_ERROR)
-	{
+    if (connect(clientSocket, (SOCKADDR*)&serverAddress, sizeof(serverAddress)) == SOCKET_ERROR)
+    {
 		//ShowErrorMessage("connect()");
 		cout << "Error" << endl;
 	}
+	{
+		BYTE packet[PACKET_SIZE] = "";
 
-    BYTE packet[PACKET_SIZE] = "";
+		PacketHeader header;
 
-    PacketHeader header;
+		header.protocol = PKT_C_LOGIN;
+		header.size = PACKET_SIZE;
+		(*(PacketHeader*)packet) = header;
 
-    header.protocol = PKT_C_LOGIN;
-    header.size = PACKET_SIZE;
-    (*(PacketHeader*)packet) = header;
+		send(clientSocket, (const char*)packet, PACKET_SIZE, 0);
+	}
+	bool g_ThreadLoop = true;
 
-    send(clientSocket, (const char*)packet, PACKET_SIZE, 0);
+	ServerPacketHandler::Init();
 
-    bool g_ThreadLoop = true;
-    
-    ServerPacketHandler::Init();
-
-    ServerManager* pServerManager = ServerManager::GetInstance();
-    pServerManager->Initialize(clientSocket);
+	ServerManager* pServerManager = ServerManager::GetInstance();
+	pServerManager->Initialize(clientSocket);
 
 	thread WorkerThread = thread([=, &g_ThreadLoop]()
 		{

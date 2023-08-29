@@ -5,6 +5,15 @@ Session::Session(SOCKET clientSocket)
 {
 }
 
+Session::~Session()
+{
+	for (auto& player : players)
+	{
+		delete player;
+	}
+	players.clear();
+}
+
 void Session::Send(BYTE* sendBuffer)
 {
 	send(socket, (const char*)sendBuffer, PACKET_SIZE, 0);
@@ -15,11 +24,10 @@ bool Session::Recv()
 	BYTE packet[PACKET_SIZE] = "";
 	int length = recv(GetSocket(), (char*)packet, sizeof(packet), 0);
 
-	PacketHeader* header = (PacketHeader*)packet;
+	return ClientPacketHandler::HandlePacket(this, (BYTE*)packet, PACKET_SIZE);
+}
 
-	if (header->protocol == PKT_C_EXIT)
-		return false;
-
-	ClientPacketHandler::HandlePacket(GetSocket(), (BYTE*)packet, PACKET_SIZE);
-	return true;
+void Session::AddPlayer(Player* player)
+{
+	players.push_back(player);
 }

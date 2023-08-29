@@ -1,12 +1,16 @@
 #include "DnfServer.h"
 #include "Session.h"
 DnfServer::DnfServer(NetAddress targetAddress, int32 maxUser)
-	: netAddress(targetAddress), maxUserCount(maxUser)
+	: netAddress(targetAddress), maxUserCount(maxUser),
+	listener()
 {
 }
 
 void DnfServer::StartServer()
 {
+	WSADATA wsaData; 
+	WSAStartup(MAKEWORD(2, 2), &wsaData); 
+
 	listener.StartAccept(netAddress);
 
 	while (true)
@@ -35,28 +39,13 @@ void DnfServer::StartServer()
 						ReleaseSession(session);
 						break;
 					};
-					/*BYTE packet[PACKET_SIZE] = "";
-					int length = recv(session->GetSocket(), (char*)packet, sizeof(packet), 0);
-					
-					PacketHeader* header = (PacketHeader*)packet;
-					if (header->protocol == PKT_C_EXIT)
-					{
-						ReleaseSession(session);
-						break;
-					}
-					ClientPacketHandler::HandlePacket(session->GetSocket(), (BYTE*)packet, PACKET_SIZE);*/
 				}
 			});
 
 		WokerThreads.push_back(move(WorkerThread));
 	}
 
-	for (auto& workerThread : WokerThreads)
-	{
-		if (workerThread.joinable())
-			workerThread.join();
-	}
-	WokerThreads.clear();
+	ReleaseWorkerThread();
 
 	listener.CloseSocket();
 }
@@ -82,7 +71,18 @@ void DnfServer::ReleaseSession(Session* session)
 	{
 		lock_guard<mutex> lockguard(lock);
 		sessions.erase(session);
-
+				
 		delete session;
+		cout << "클라이언트 세션 종료" << endl;
 	}
+}
+
+void DnfServer::ReleaseWorkerThread()
+{
+	for (auto& workerThread : WokerThreads)
+	{
+		if (workerThread.joinable())
+			workerThread.join();
+	}
+	WokerThreads.clear();
 }

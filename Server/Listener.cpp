@@ -12,6 +12,7 @@ void Listener::CloseSocket()
     {
         closesocket(listenSocket);
     }
+    WSACleanup();
 }
 
 HANDLE Listener::GetHandle()
@@ -23,7 +24,17 @@ bool Listener::CreateListenSocket(NetAddress netAddress)
 {
     listenSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    bind(listenSocket, (SOCKADDR*)&netAddress.GetSockAddr(), sizeof(SOCKADDR_IN));
+    if (listenSocket == INVALID_SOCKET)
+    {
+        cout << "Listen Socket Error" << endl;
+        return false;
+    }
+
+    if (SOCKET_ERROR == ::bind(listenSocket, (SOCKADDR*)&netAddress.GetSockAddr(), sizeof(SOCKADDR_IN)))
+    {
+        cout << "Bind Error" << endl;
+        return false;
+    }
     
     listen(listenSocket, SOMAXCONN);
 
