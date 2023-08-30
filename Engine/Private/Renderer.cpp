@@ -341,7 +341,7 @@ HRESULT CRenderer::Render_Debug()
 
 	for (auto& pDebugCom : m_DebugObject)
 	{
-		//pDebugCom->Render();
+		pDebugCom->Render();
 		Safe_Release(pDebugCom);
 	}
 

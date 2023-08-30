@@ -112,6 +112,7 @@ bool Handle_S_CREATE_PLAYER(SOCKET socket, BYTE* buffer)
 	{
 		pPlayer->SetId(ServerMgr->GetClientId());
 		pPlayer->SetLocallyControlled(bIsPlayer);
+		pPlayer->AddColliderPacket();
 	}
 
 	return true;
@@ -177,5 +178,35 @@ bool Handle_S_EXIT(SOCKET socket, BYTE* buffer)
 
 	ServerMgr->DestroyObjectById(id);
 	
+	return true;
+}
+
+bool Handle_S_SKILL(SOCKET socket, BYTE* buffer)
+{
+	int Objectid;
+
+	int bufferOffset = sizeof(PacketHeader);
+	memcpy(&Objectid, buffer + bufferOffset, sizeof(Objectid));
+
+	bufferOffset += sizeof(Objectid);
+
+	int Skillid;
+
+	memcpy(&Skillid, buffer + bufferOffset, sizeof(Skillid));
+
+	bufferOffset += sizeof(Skillid);
+
+	_float3 vPos;
+	memcpy(&vPos, buffer + bufferOffset, sizeof(vPos));
+
+	bufferOffset += sizeof(vPos);
+
+	ServerManager* ServerMgr = ServerManager::GetInstance();
+
+	CGameObject * pObject = ServerMgr->FindGameObjectById(Objectid);
+
+	CPlayer * player = dynamic_cast<CPlayer*>(pObject);
+	player->ActivateSkill(Skillid, vPos);
+
 	return true;
 }

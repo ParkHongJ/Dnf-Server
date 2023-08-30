@@ -3,6 +3,7 @@
 #include "GameInstance.h"
 #include "HierarchyNode.h"
 #include "../Default/ServerManager.h"
+#include "Effect.h"
 CPlayer::CPlayer(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: CGameObject(pDevice, pContext)
 {
@@ -37,6 +38,9 @@ void CPlayer::Tick(_float fTimeDelta)
 		WalkTick(fTimeDelta);
 		break;
 	case RUN:
+		break;
+	case SKILL:
+		SkillTick(fTimeDelta);
 		break;
 	default:
 		break;
@@ -104,6 +108,9 @@ void CPlayer::LateTick(_float fTimeDelta)
 	PlayAnimation(fTimeDelta);
 
 	m_pRendererCom->Add_RenderGroup(CRenderer::RENDER_NONALPHABLEND, this);
+	m_pColliderCom->Update(m_pTransformCom->Get_WorldMatrix());
+
+	m_pRendererCom->Add_DebugGroup(m_pColliderCom);
 }
 
 HRESULT CPlayer::Render()
@@ -135,6 +142,8 @@ HRESULT CPlayer::Render()
 		return E_FAIL;
 
 #ifdef _DEBUG
+
+	m_pColliderCom->Render();
 	/*for (_uint i = 0; i < COLLILDERTYPE_END; ++i)
 	{
 		if(nullptr != m_pColliderCom[i])
@@ -145,6 +154,42 @@ HRESULT CPlayer::Render()
 #endif
 
 	return S_OK;
+}
+
+void CPlayer::AddColliderPacket()
+{
+	BYTE sendBuffer[PACKET_SIZE] = "";
+
+	PacketHeader header;
+	header.protocol = PKT_C_ADD_COLLIDER;
+	header.size = PACKET_SIZE;
+
+	*(PacketHeader*)sendBuffer = header;
+
+	int bufferOffset = sizeof(PacketHeader);
+
+	memcpy(sendBuffer + bufferOffset, &m_iId, sizeof(m_iId));
+
+	bufferOffset += sizeof(m_iId);
+
+	Type type = Type::PLAYER;
+
+	memcpy(sendBuffer + bufferOffset, &type, sizeof(type));
+
+	bufferOffset += sizeof(type);
+
+	CCollider::COLLIDERDESC ColliderDesc = m_pColliderCom->GetColliderDesc();
+
+	memcpy(sendBuffer + bufferOffset, &ColliderDesc.vSize, sizeof(ColliderDesc.vSize));
+
+	bufferOffset += sizeof(ColliderDesc.vSize);
+
+	memcpy(sendBuffer + bufferOffset, &ColliderDesc.vCenter, sizeof(ColliderDesc.vCenter));
+
+	bufferOffset += sizeof(ColliderDesc.vCenter);
+
+	ServerManager* ServerMgr = ServerManager::GetInstance();
+	ServerMgr->Send(sendBuffer, PACKET_SIZE);
 }
 
 void CPlayer::SendMovementPacket()
@@ -232,6 +277,39 @@ void CPlayer::IdleTick(_float fTimeDelta)
 		if (pGameInstance->Get_DIKState(DIK_DOWN) || pGameInstance->Get_DIKState(DIK_UP) || pGameInstance->Get_DIKState(DIK_LEFT) || pGameInstance->Get_DIKState(DIK_RIGHT))
 		{
 			UpdateState(STATE::WALK);
+		}
+		else if (pGameInstance->GetDIKDownState(DIK_Q))
+		{
+			//스킬 요청
+			if (bLocallyControlled)
+			{
+				//스킬 패킷
+				ServerManager* ServerMgr = ServerManager::GetInstance();
+
+				BYTE sendBuffer[PACKET_SIZE] = "";
+
+				PacketHeader header;
+				header.protocol = PKT_C_SKILL;
+				header.size = PACKET_SIZE;
+				*(PacketHeader*)sendBuffer = header;
+
+				//누가 스킬을 사용했는지?
+				int bufferOffset = sizeof(PacketHeader);
+				memcpy(sendBuffer + bufferOffset, &m_iId, sizeof(m_iId));
+
+				bufferOffset += sizeof(m_iId);
+
+				//어떤 스킬을 사용했는지?
+
+				//어디에 사용했는지?
+				_float3 vPos;
+				XMStoreFloat3(&vPos, m_pTransformCom->Get_State(CTransform::STATE_POSITION));
+
+				memcpy(sendBuffer + bufferOffset, &vPos, sizeof(vPos));
+				bufferOffset += sizeof(vPos);
+
+				ServerMgr->Send(sendBuffer, PACKET_SIZE);
+			}
 		}
 	}
 }
@@ -333,6 +411,13 @@ void CPlayer::RunTick(_float fTimeDelta)
 	}
 }
 
+void CPlayer::SkillTick(_float fTimeDelta)
+{
+	
+	
+	UpdateState(STATE::IDLE);
+}
+
 void CPlayer::UpdateState(STATE NewState)
 {
 	if (m_eState != NewState)
@@ -347,11 +432,66 @@ void CPlayer::UpdateState(STATE NewState)
 			break;
 		case RUN:
 			break;
+		case SKILL:
+			break;
 		default:
 			break;
 		}
 		m_eState = NewState;
 	}
+}
+
+void CPlayer::ActivateSkill(int id, _float3 vPos)
+{
+	CGameInstance* pGameInstance = CGameInstance::Get_Instance();
+
+	CGameObject* pObject = pGameInstance->Add_GameObjectToLayer(TEXT("Prototype_GameObject_Effect"), LEVEL_GAMEPLAY, L"Effect");
+
+	pObject->SetId(id);
+
+	CCollider* Collider = (CCollider*)pObject->Get_ComponentPtr(L"Com_AABB");
+
+	CCollider::COLLIDERDESC Desc = Collider->GetColliderDesc();
+
+	ServerManager* ServerMgr = ServerManager::GetInstance();
+
+	ServerMgr->AddGameObject(id, pObject);
+
+	CTransform* Transform = (CTransform*)pObject->Get_ComponentPtr(L"Com_Transform");
+
+	Transform->Set_State(CTransform::STATE_POSITION, XMVectorSetW(XMLoadFloat3(&vPos), 1.f));
+
+	BYTE sendBuffer[PACKET_SIZE] = "";
+
+	int bufferOffset = sizeof(PacketHeader);
+
+	PacketHeader header;
+	header.protocol = PKT_C_ADD_COLLIDER;
+	header.size = PACKET_SIZE;
+
+	*(PacketHeader*)sendBuffer = header;
+
+	memcpy(sendBuffer + bufferOffset, &id, sizeof(id));
+
+	bufferOffset += sizeof(id);
+
+	Type type = Type::Type_SKILL;
+
+	memcpy(sendBuffer + bufferOffset, &type, sizeof(type));
+
+	bufferOffset += sizeof(type);
+
+	memcpy(sendBuffer + bufferOffset, &Desc.vSize, sizeof(Desc.vSize));
+
+	bufferOffset += sizeof(Desc.vSize);
+
+	memcpy(sendBuffer + bufferOffset, &Desc.vCenter, sizeof(Desc.vCenter));
+
+	bufferOffset += sizeof(Desc.vCenter);
+
+	ServerMgr->Send(sendBuffer, PACKET_SIZE);
+
+	UpdateState(STATE::SKILL);
 }
 
 HRESULT CPlayer::Ready_Components()
@@ -382,6 +522,14 @@ HRESULT CPlayer::Ready_Components()
 	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Texture_Player"), TEXT("Com_Texture"), (CComponent**)&m_pTextureCom)))
 		return E_FAIL;
 
+	/* For.Com_AABB */
+	CCollider::COLLIDERDESC		ColliderDesc;
+	ZeroMemory(&ColliderDesc, sizeof(CCollider::COLLIDERDESC));
+
+	ColliderDesc.vSize = _float3(0.15f, 0.25f, 0.1f);
+	ColliderDesc.vCenter = _float3(0.f, -0.05f, 0.f);
+	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Collider_AABB"), TEXT("Com_AABB"), (CComponent**)&m_pColliderCom, &ColliderDesc)))
+		return E_FAIL;
 
 	return S_OK;
 }
@@ -416,6 +564,7 @@ void CPlayer::Free()
 {
 	__super::Free();
 
+	Safe_Release(m_pColliderCom);
 	Safe_Release(m_pTextureCom);
 	Safe_Release(m_pVIBufferCom);
 	Safe_Release(m_pShaderCom);

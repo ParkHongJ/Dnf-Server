@@ -28,6 +28,7 @@ public:
 		return m_eColliderType;
 	}
 
+	COLLIDERDESC GetColliderDesc() { return m_ColliderDesc; }
 public:
 	virtual HRESULT Initialize_Prototype(TYPE eColliderType);
 	virtual HRESULT Initialize(void* pArg);

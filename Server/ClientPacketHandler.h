@@ -2,6 +2,7 @@
 #include "Server_Defines.h"
 
 class Session;
+
 using PacketHandlerFunc = std::function<bool(Session*, BYTE*, INT32)>;
 extern PacketHandlerFunc GPacketHandler[UINT16_MAX];
 
@@ -11,6 +12,8 @@ bool Handle_C_ENTER_GAME(Session* session, BYTE* buffer);
 bool Handle_C_CREATE_PLAYER(Session* session, BYTE* buffer);
 bool Handle_C_MOVE(Session* session, BYTE* buffer);
 bool Handle_C_EXIT(Session* session, BYTE* buffer);
+bool Handle_C_SKILL(Session* session, BYTE* buffer);
+bool Handle_C_ADD_COLLIDER(Session* session, BYTE* buffer);
 
 class ClientPacketHandler
 {
@@ -40,6 +43,14 @@ public:
         GPacketHandler[PKT_C_EXIT] = [](Session* session, BYTE* buffer, INT32 len)
         {
             return Handle_C_EXIT(session, buffer);
+        };
+        GPacketHandler[PKT_C_SKILL] = [](Session* session, BYTE* buffer, INT32 len)
+        {
+            return Handle_C_SKILL(session, buffer);
+        };
+        GPacketHandler[PKT_C_ADD_COLLIDER] = [](Session* session, BYTE* buffer, INT32 len)
+        {
+            return Handle_C_ADD_COLLIDER(session, buffer);
         };
     }
     static bool HandlePacket(Session* session, BYTE* buffer, INT32 len);

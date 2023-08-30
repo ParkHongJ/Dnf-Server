@@ -26,6 +26,12 @@
     <ClCompile Include="Room.cpp">
       <Filter>Contents\Room</Filter>
     </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>Contents\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Skill.cpp">
+      <Filter>Contents\Skill</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ServerCore">
@@ -60,6 +66,12 @@
     </Filter>
     <Filter Include="Contents\Player">
       <UniqueIdentifier>{ac2fa34a-f2bc-41b1-b0e2-e254df24419e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Contents\Object">
+      <UniqueIdentifier>{1a5ca3bc-2137-43f9-b186-3a0e65275fc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Contents\Skill">
+      <UniqueIdentifier>{0de07817-d2ed-4055-8ad7-b7cdff396c2f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -96,5 +108,14 @@
     <ClInclude Include="Room.h">
       <Filter>Contents\Room</Filter>
     </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>Contents\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Skill.h">
+      <Filter>Contents\Skill</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
 </Project>

@@ -8,6 +8,7 @@ class CShader;
 class CTexture;
 class CRenderer;
 class CTransform;
+class CCollider;
 class CVIBuffer_Rect;
 END
 
@@ -21,7 +22,8 @@ enum STATE
 {
 	IDLE = 4,
 	WALK = 8,
-	RUN
+	RUN,
+	SKILL
 };
 enum ANIMATION
 {
@@ -46,6 +48,7 @@ public:
 	virtual HRESULT Render();
 
 public:
+	void AddColliderPacket();
 	void SetLocallyControlled(_bool LocallyControlled) { bLocallyControlled = LocallyControlled; };
 	void SendMovementPacket();
 	void SetDestination(_fvector vPos, int State, int Dir);
@@ -54,12 +57,15 @@ public:
 	void IdleTick(_float fTimeDelta);
 	void WalkTick(_float fTimeDelta);
 	void RunTick(_float fTimeDelta);
-
+	void SkillTick(_float fTimeDelta);
 	void UpdateState(STATE NewState);
+
+	void ActivateSkill(int id, _float3 vPos);
 private:
-	CShader*				m_pShaderCom = nullptr;
-	CRenderer*				m_pRendererCom = nullptr;
-	CTransform*				m_pTransformCom = nullptr;
+	CShader* m_pShaderCom = nullptr;
+	CRenderer* m_pRendererCom = nullptr;
+	CTransform* m_pTransformCom = nullptr;
+	CCollider* m_pColliderCom = nullptr;
 	CTexture* m_pTextureCom = nullptr;
 	CVIBuffer_Rect* m_pVIBufferCom = nullptr;
 

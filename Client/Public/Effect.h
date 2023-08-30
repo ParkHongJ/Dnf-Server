@@ -9,6 +9,7 @@ class CTexture;
 class CRenderer;
 class CTransform;
 class CVIBuffer_Rect;
+class CCollider;
 END
 
 BEGIN(Client)
@@ -34,6 +35,7 @@ private:
 	CTexture*				m_pTextureCom = nullptr;
 	CVIBuffer_Rect*			m_pVIBufferCom = nullptr;
 
+	CCollider* m_pColliderCom = nullptr;
 private:
 	_float					m_fFrame = 0.f;
 

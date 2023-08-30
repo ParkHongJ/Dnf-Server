@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "..\Public\Effect.h"
 #include "GameInstance.h"
-
+#include "../Default/ServerManager.h"
 CEffect::CEffect(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: CGameObject(pDevice, pContext)
 {
@@ -22,8 +22,6 @@ HRESULT CEffect::Initialize(void * pArg)
 	if (FAILED(Ready_Components()))
 		return E_FAIL;
 
-	m_pTransformCom->Set_State(CTransform::STATE_POSITION, XMVectorSet(_float(rand() % 10), 1.3f, _float(rand() % 10), 1.f));
-
 	return S_OK;
 }
 
@@ -32,17 +30,21 @@ void CEffect::Tick(_float fTimeDelta)
 	m_fFrame += 90.0f * fTimeDelta;
 
 	if (m_fFrame >= 90.0f)
+	{
 		m_fFrame = 0.f;
+	}
 }
 
 void CEffect::LateTick(_float fTimeDelta)
 {
 	if (nullptr == m_pRendererCom)
 		return;
-
 	Compute_CamZ(m_pTransformCom->Get_State(CTransform::STATE_POSITION));
 
 	m_pRendererCom->Add_RenderGroup(CRenderer::RENDER_ALPHABLEND, this);
+	m_pColliderCom->Update(m_pTransformCom->Get_WorldMatrix());
+
+	m_pRendererCom->Add_DebugGroup(m_pColliderCom);
 }
 
 HRESULT CEffect::Render()
@@ -74,6 +76,8 @@ HRESULT CEffect::Render()
 	if (FAILED(m_pVIBufferCom->Render()))
 		return E_FAIL;
 
+	m_pColliderCom->Render();
+
 	return S_OK;
 }
 
@@ -98,7 +102,15 @@ HRESULT CEffect::Ready_Components()
 	/* For.Com_Texture */
 	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Texture_Explosion"), TEXT("Com_Texture"), (CComponent**)&m_pTextureCom)))
 		return E_FAIL;
+	/* For.Com_AABB */
 
+	CCollider::COLLIDERDESC		ColliderDesc;
+	ZeroMemory(&ColliderDesc, sizeof(CCollider::COLLIDERDESC));
+
+	ColliderDesc.vSize = _float3(0.15f, 0.15f, 0.1f);
+	ColliderDesc.vCenter = _float3(0.f, 0.f, 0.f);
+	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Collider_AABB"), TEXT("Com_AABB"), (CComponent**)&m_pColliderCom, &ColliderDesc)))
+		return E_FAIL;
 	return S_OK;
 }
 
@@ -132,6 +144,7 @@ void CEffect::Free()
 {
 	__super::Free();
 
+	Safe_Release(m_pColliderCom);
 	Safe_Release(m_pTextureCom);
 	Safe_Release(m_pVIBufferCom);
 	Safe_Release(m_pShaderCom);

@@ -7,9 +7,12 @@ Session::Session(SOCKET clientSocket)
 
 Session::~Session()
 {
-	for (auto& player : players)
+	for (int i = 0; i < players.size(); i++)
 	{
-		delete player;
+		if (players[i] != nullptr)
+		{
+			delete players[i];
+		}
 	}
 	players.clear();
 }

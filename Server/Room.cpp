@@ -1,19 +1,53 @@
 #include "Room.h"
 #include "Player.h"
 #include "Session.h"
-
+#include "Skill.h"
+#include "CollisionThread.h"
 Room GRoom;
 
-void Room::Enter(Player* player)
+Room::~Room()
 {
-	lock_guard<mutex> lockguard(lock);
-	_players[player->PlayerId] = player;
+	for (int i = ColliderGroup::COL_PLAYER; i < ColliderGroup::MAX; i++)
+	{
+		lock_guard<mutex> lockguard(lock);
+		/*for (auto& collider :colliderObjects[i])
+		{
+			delete collider;
+		}*/
+	}
 }
 
-void Room::Leave(Player* player)
+void Room::Enter(Object* object)
 {
+	if (object == nullptr)
+		return;
+
 	lock_guard<mutex> lockguard(lock);
-	_players.erase(player->PlayerId);
+	if (object->type == PLAYER)
+	{
+		_players[object->ObjectId] = object;
+	}
+	else if (object->type == SKILL)
+	{
+		_skills[object->ObjectId] = dynamic_cast<Skill*>(object);
+	}
+	
+}
+
+void Room::Leave(Object* object)
+{
+	if (object == nullptr)
+		return;
+
+	lock_guard<mutex> lockguard(lock);
+	if (object->type == PLAYER)
+	{
+		_players.erase(object->ObjectId);
+	}
+	else if (object->type == SKILL)
+	{
+		_skills.erase(object->ObjectId);
+	}
 }
 
 void Room::Broadcast(BYTE* sendBuffer)
@@ -25,20 +59,20 @@ void Room::Broadcast(BYTE* sendBuffer)
 	}
 }
 
-void Room::BroadcastWithOutMe(int playerId, BYTE* sendBuffer)
+void Room::BroadcastWithOutMe(int objectId, BYTE* sendBuffer)
 {
 	//자신을 제외한 브로드캐스트
 	lock_guard<mutex> lockguard(lock);
 	for (auto& player : _players)
 	{
-		if (player.first != playerId)
+		if (player.first != objectId)
 		{
 			player.second->ownerSession->Send(sendBuffer);
 		}
 	}
 }
 
-void Room::SendRoomInfo(int playerId, BYTE* sendBuffer, int bufferOffset)
+void Room::SendRoomInfo(int objectId, BYTE* sendBuffer, int bufferOffset)
 {
 	{
 		lock_guard<mutex> lockguard(lock);
@@ -50,14 +84,89 @@ void Room::SendRoomInfo(int playerId, BYTE* sendBuffer, int bufferOffset)
 
 		for (auto& player : _players)
 		{
-			if (player.second->PlayerId != playerId)
+			if (player.second->ObjectId != objectId)
 			{
-				int id = player.second->PlayerId;
+				int id = player.second->ObjectId;
 
 				memcpy(sendBuffer + bufferOffset, &id, sizeof(id));
 				bufferOffset += sizeof(id);
 			}
 		}
-		_players[playerId]->ownerSession->Send(sendBuffer);
+		_players[objectId]->ownerSession->Send(sendBuffer);
 	}
 }
+
+void Room::Update()
+{
+	lock_guard<mutex> lockguard(lock);
+	for (auto skill : _skills)
+	{
+		skill.second->Update();
+	}
+}
+
+void Room::AddCollision(Collider* collider, int Group)
+{
+	lock_guard<mutex> lockguard(lock);
+	//colliderObjects[Group].push_back(collider);
+}
+
+void Room::CollisionToPlayer(Skill* skill/*, OUT vector<int>& collisionId*/)
+{
+	//데드락..
+	lock_guard<mutex> lockguard(lock2);
+	for (auto player : _players)
+	{
+		if (player.second == skill->Owner)
+			continue;
+
+		Collider* Sour = player.second->collider;
+		Collider* Dest = skill->collider;
+		if (Sour == nullptr || Dest == nullptr)
+			continue;
+
+		Sour->UpdateMinMax();
+		Dest->UpdateMinMax();
+
+		if (IsCollisionAABB(*Sour, *Dest))
+		{
+			cout << player.first << "번 플레이어와 " << skill->ObjectId << "번 스킬 충돌" << endl;
+			//collisionId.push_back(player.first);
+		}
+	}
+}
+
+Object* Room::FindPlayerById(int id)
+{
+	lock_guard<mutex> lockguard(lock);
+
+	map<uint64, Object*>::iterator iter;
+
+	iter = _players.find(id);
+	if (iter != _players.end())
+	{
+		return iter->second;
+	}
+
+	return nullptr;
+}
+
+Object* Room::FindSkillById(int id)
+{
+	lock_guard<mutex> lockguard(lock);
+
+	map<uint64, Skill*>::iterator iter;
+
+	iter = _skills.find(id);
+	if (iter != _skills.end())
+	{
+		return iter->second;
+	}
+	return nullptr;
+}
+
+//list<Collider*>* Room::GetColliderObjects(int Group)
+//{
+//	lock_guard<mutex> lockguard(lock);
+//	return &colliderObjects[Group];
+//}

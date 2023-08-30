@@ -15,6 +15,13 @@ using namespace Client;
 
 #define PACKET_SIZE 512
 
+enum Type
+{
+    PLAYER = 0,
+    MONSTER,
+    Type_SKILL
+};
+
 struct PacketHeader
 {
     UINT16 size;
@@ -34,6 +41,12 @@ enum : UINT16
 
     PKT_C_MOVE = 1008,
     PKT_S_MOVE = 1009,
+
+    PKT_C_SKILL = 1010,
+    PKT_S_SKILL = 1011,
+    
+    PKT_C_ADD_COLLIDER = 1012,
+    PKT_S_ADD_COLLIDER = 1013,
 
     PKT_C_EXIT = 9998,
     PKT_S_EXIT = 9999

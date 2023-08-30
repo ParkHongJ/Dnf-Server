@@ -14,6 +14,10 @@ public:
 	void ReleaseSession(Session* session);
 
 	void ReleaseWorkerThread();
+
+public:
+	static atomic<uint64> idGenerator;
+
 private:
 	mutex lock;
 

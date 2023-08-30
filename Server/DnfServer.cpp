@@ -1,5 +1,8 @@
 #include "DnfServer.h"
 #include "Session.h"
+#include "Room.h"
+atomic<uint64> DnfServer::idGenerator = 0;
+
 DnfServer::DnfServer(NetAddress targetAddress, int32 maxUser)
 	: netAddress(targetAddress), maxUserCount(maxUser),
 	listener()
@@ -13,6 +16,14 @@ void DnfServer::StartServer()
 
 	listener.StartAccept(netAddress);
 
+	thread RoomThread([]() {
+		//todo
+		while (true)
+		{
+			GRoom.Update();
+		}
+		});
+
 	while (true)
 	{
 		int SockSize = sizeof(SOCKADDR);
@@ -24,7 +35,7 @@ void DnfServer::StartServer()
 			cout << "Accept Error : " << error << endl;
 			continue;
 		}
-		cout << "클라이언트 연결 완료" << "\n";
+		cout << "클라이언트 연결 완료" << endl;
 
 		Session* session = CreateSession(hClient);
 		AddSession(session);
@@ -44,6 +55,9 @@ void DnfServer::StartServer()
 
 		WokerThreads.push_back(move(WorkerThread));
 	}
+
+	if (RoomThread.joinable())
+		RoomThread.join();
 
 	ReleaseWorkerThread();
 
