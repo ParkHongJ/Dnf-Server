@@ -13,12 +13,12 @@ void Skill::Update()
 
 	StartMoveTick = currentMoveTick;
 
-	cout << "Skill Update!!" << endl;
+	//cout << "Skill Update!!" << endl;
 	//다른 오브젝트들과 충돌했는가
 	//플레이어와 충돌함
 
 	vector<int> collisionId;
-	GRoom.CollisionToPlayer(this/*, collisionId*/);
+	GRoom.CollisionToPlayer(this, collisionId);
 	
 	if (!collisionId.empty())
 	{

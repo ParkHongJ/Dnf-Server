@@ -4,7 +4,7 @@
 
 BEGIN(Engine)
 
-class CPipeLine	final : public CBase
+class ENGINE_DLL CPipeLine	final : public CBase
 {
 	DECLARE_SINGLETON(CPipeLine)
 public:

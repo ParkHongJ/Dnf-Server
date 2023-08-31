@@ -96,17 +96,11 @@ void CollisionLoop(int Row, int Col, list<Collider>* CollisionObjects, unordered
 
 bool IsCollisionAABB(Collider Sour, Collider Dest)
 {
-    // X 축에서의 겹침 확인
-    bool xOverlap = Sour.WorldMax[0] >= Dest.WorldMin[0] && Dest.WorldMax[0] >= Sour.WorldMin[0];
+    if (Sour.WorldMax[0] < Dest.WorldMin[0] || Sour.WorldMin[0] > Dest.WorldMax[0]) return false;
+    if (Sour.WorldMax[1] < Dest.WorldMin[1] || Sour.WorldMin[0] > Dest.WorldMax[1]) return false;
+    if (Sour.WorldMax[2] < Dest.WorldMin[2] || Sour.WorldMin[2] > Dest.WorldMax[2]) return false;
 
-    // Y 축에서의 겹침 확인
-    bool yOverlap = Sour.WorldMax[1] >= Dest.WorldMin[1] && Dest.WorldMax[1] >= Sour.WorldMin[1];
-
-    // Z 축에서의 겹침 확인
-    bool zOverlap = Sour.WorldMax[2] >= Dest.WorldMin[2] && Dest.WorldMax[2] >= Sour.WorldMin[2];
-
-    // X 축, Y 축, Z 축에서 모두 겹친다면 충돌
-    return xOverlap && yOverlap && zOverlap;
+    return true;
 }
 
 void Collider::UpdateMinMax()
@@ -123,7 +117,7 @@ void Collider::UpdateMinMax()
 
     for (int i = 0; i < 3; i++)
     {
-        WorldMin[i] = ColliderPos[i] - Size[i];
-        WorldMax[i] = ColliderPos[i] + Size[i];
+        WorldMin[i] = ColliderPos[i] - Size[i] / 2.f;
+        WorldMax[i] = ColliderPos[i] + Size[i] / 2.f;
     }
 }

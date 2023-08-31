@@ -25,7 +25,7 @@ public:
 	void Update();
 	void AddCollision(Collider* collider, int Group);
 
-	void CollisionToPlayer(Skill* skill/*, vector<int>& collisionId*/);
+	void CollisionToPlayer(Skill* skill, vector<int>& collisionId);
 	Object* FindPlayerById(int id);
 	Object* FindSkillById(int id);
 	//list<Collider*>* GetColliderObjects(int Group);

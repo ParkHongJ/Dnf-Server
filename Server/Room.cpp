@@ -111,12 +111,13 @@ void Room::AddCollision(Collider* collider, int Group)
 	//colliderObjects[Group].push_back(collider);
 }
 
-void Room::CollisionToPlayer(Skill* skill/*, OUT vector<int>& collisionId*/)
+void Room::CollisionToPlayer(Skill* skill, OUT vector<int>& collisionId)
 {
 	//데드락..
 	lock_guard<mutex> lockguard(lock2);
 	for (auto player : _players)
 	{
+		//스킬을 시전한 플레이어는 제외
 		if (player.second == skill->Owner)
 			continue;
 
@@ -131,7 +132,7 @@ void Room::CollisionToPlayer(Skill* skill/*, OUT vector<int>& collisionId*/)
 		if (IsCollisionAABB(*Sour, *Dest))
 		{
 			cout << player.first << "번 플레이어와 " << skill->ObjectId << "번 스킬 충돌" << endl;
-			//collisionId.push_back(player.first);
+			collisionId.push_back(player.first);
 		}
 	}
 }

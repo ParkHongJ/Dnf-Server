@@ -188,6 +188,9 @@ bool Handle_C_SKILL(Session* session, BYTE* buffer)
     skill->type = SKILL;
     skill->ownerSession = session;
     skill->Owner = Owner;
+    skill->x = vPos[0];
+    skill->y = vPos[1];
+    skill->z = vPos[2];
 
     GRoom.Enter(skill);
 

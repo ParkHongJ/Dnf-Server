@@ -10,6 +10,7 @@ class CRenderer;
 class CTransform;
 class CCollider;
 class CVIBuffer_Rect;
+class CPipeLine;
 END
 
 enum DIR 
@@ -23,13 +24,15 @@ enum STATE
 	IDLE = 4,
 	WALK = 8,
 	RUN,
-	SKILL
+	SKILL,
+	HIT
 };
 enum ANIMATION
 {
 	ANIM_IDLE = 176,
 	ANIM_WALK = 180,
-	ANIM_RUN
+	ANIM_RUN,
+	ANIM_HIT = 96
 };
 BEGIN(Client)
 
@@ -58,6 +61,9 @@ public:
 	void WalkTick(_float fTimeDelta);
 	void RunTick(_float fTimeDelta);
 	void SkillTick(_float fTimeDelta);
+	void HitTick(_float fTimeDelta);
+
+
 	void UpdateState(STATE NewState);
 
 	void ActivateSkill(int id, _float3 vPos);

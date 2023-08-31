@@ -13,6 +13,7 @@
 #include "Particle_Point.h"
 #include "Effect.h"
 #include "Sky.h"
+#include "CUIManager.h"
 //#include "UI.h"
 
 
@@ -114,6 +115,10 @@ HRESULT CLoader::Loading_ForGamePlayLevel()
 	if (FAILED(pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_ForkLift"),
 		CForkLift::Create(m_pDevice, m_pContext))))
 		return E_FAIL;
+	/* For.Prototype_GameObject_UIManager */
+	if (FAILED(pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_UIManager"),
+		CUIManager::Create(m_pDevice, m_pContext))))
+		return E_FAIL;
 
 	///* For.Prototype_GameObject_UI*/
 	//if (FAILED(pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_UI"),
@@ -180,6 +185,11 @@ HRESULT CLoader::Loading_ForGamePlayLevel()
 	/* For.Prototype_Component_Texture_Snow */
 	if (FAILED(pGameInstance->Add_Prototype(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Texture_Snow"),
 		CTexture::Create(m_pDevice, m_pContext, TEXT("../Bin/Resources/Textures/Snow/Snow.png"), 1))))
+		return E_FAIL;
+
+	/* For.Prototype_Component_Texture_MainUI */
+	if (FAILED(pGameInstance->Add_Prototype(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Texture_MainUI"),
+		CTexture::Create(m_pDevice, m_pContext, TEXT("../Bin/Resources/Textures/MainUI/%d.png"), 4))))
 		return E_FAIL;
 
 	//if (FAILED(pGameInstance->Add_Prototype(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Texture_Terrain"),

@@ -73,6 +73,9 @@
     <Filter Include="ServerManager">
       <UniqueIdentifier>{04cfb812-2500-403a-bf68-9996b0f4ee9a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="02.GameObjects\UIManager">
+      <UniqueIdentifier>{2743248d-91cf-4811-ab11-10de4bf6b478}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -150,6 +153,9 @@
     <ClInclude Include="ServerManager.h">
       <Filter>ServerManager</Filter>
     </ClInclude>
+    <ClInclude Include="..\public\CUIManager.h">
+      <Filter>02.GameObjects\UIManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -211,6 +217,9 @@
     </ClCompile>
     <ClCompile Include="ServerManager.cpp">
       <Filter>ServerManager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\CUIManager.cpp">
+      <Filter>02.GameObjects\UIManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

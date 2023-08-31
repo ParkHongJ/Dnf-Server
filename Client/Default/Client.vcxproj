@@ -171,6 +171,7 @@
     <ClInclude Include="..\public\BackGround.h" />
     <ClInclude Include="..\Public\Camera_Free.h" />
     <ClInclude Include="..\Public\Client_Defines.h" />
+    <ClInclude Include="..\public\CUIManager.h" />
     <ClInclude Include="..\Public\Effect.h" />
     <ClInclude Include="..\Public\ForkLift.h" />
     <ClInclude Include="..\Public\Level_GamePlay.h" />
@@ -195,6 +196,7 @@
   <ItemGroup>
     <ClCompile Include="..\private\BackGround.cpp" />
     <ClCompile Include="..\Private\Camera_Free.cpp" />
+    <ClCompile Include="..\private\CUIManager.cpp" />
     <ClCompile Include="..\Private\Effect.cpp" />
     <ClCompile Include="..\Private\ForkLift.cpp" />
     <ClCompile Include="..\Private\Level_GamePlay.cpp" />

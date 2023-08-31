@@ -130,7 +130,6 @@ HRESULT CPlayer::Render()
 	if (FAILED(pGameInstance->Bind_RenderTargetSRV(TEXT("Target_Depth"), m_pShaderCom, "g_DepthTexture")))
 		return E_FAIL;
 
-	RELEASE_INSTANCE(CGameInstance);
 
 	if (FAILED(m_pTextureCom->Set_SRV(m_pShaderCom, "g_DiffuseTexture", _uint(m_fFrame))))
 		return E_FAIL;
@@ -152,6 +151,7 @@ HRESULT CPlayer::Render()
 
 	m_pNavigationCom->Render();*/
 #endif
+	RELEASE_INSTANCE(CGameInstance);
 
 	return S_OK;
 }
@@ -413,8 +413,11 @@ void CPlayer::RunTick(_float fTimeDelta)
 
 void CPlayer::SkillTick(_float fTimeDelta)
 {
-	
-	
+	UpdateState(STATE::IDLE);
+}
+
+void CPlayer::HitTick(_float fTimeDelta)
+{
 	UpdateState(STATE::IDLE);
 }
 
@@ -433,6 +436,9 @@ void CPlayer::UpdateState(STATE NewState)
 		case RUN:
 			break;
 		case SKILL:
+			break;
+		case HIT:
+			m_fFrame = _float(HIT);
 			break;
 		default:
 			break;
@@ -526,7 +532,7 @@ HRESULT CPlayer::Ready_Components()
 	CCollider::COLLIDERDESC		ColliderDesc;
 	ZeroMemory(&ColliderDesc, sizeof(CCollider::COLLIDERDESC));
 
-	ColliderDesc.vSize = _float3(0.15f, 0.25f, 0.1f);
+	ColliderDesc.vSize = _float3(0.15f, 0.25f, 0.05f);
 	ColliderDesc.vCenter = _float3(0.f, -0.05f, 0.f);
 	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Collider_AABB"), TEXT("Com_AABB"), (CComponent**)&m_pColliderCom, &ColliderDesc)))
 		return E_FAIL;
