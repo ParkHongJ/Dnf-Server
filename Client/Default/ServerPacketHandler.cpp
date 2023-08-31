@@ -210,3 +210,32 @@ bool Handle_S_SKILL(SOCKET socket, BYTE* buffer)
 
 	return true;
 }
+
+bool Handle_S_CHANGE_HP(SOCKET socket, BYTE* buffer)
+{
+	int a = 10;
+	//어떤 오브젝트id가
+	//hp가 변했다
+	int bufferOffset = sizeof(PacketHeader);
+
+	int id;
+	memcpy(&id, buffer + bufferOffset, sizeof(id));
+
+	bufferOffset += sizeof(id);
+
+	float hp;
+	memcpy(&hp, buffer + bufferOffset, sizeof(hp));
+
+	bufferOffset += sizeof(hp);
+
+	ServerManager* ServerMgr = ServerManager::GetInstance();
+
+	CGameObject* Object = ServerMgr->FindGameObjectById(id);
+
+	if (Object != nullptr)
+	{
+		Object->OnDamaged(nullptr, hp);
+	}
+
+	return true;
+}

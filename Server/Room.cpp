@@ -52,7 +52,7 @@ void Room::Leave(Object* object)
 
 void Room::Broadcast(BYTE* sendBuffer)
 {
-	lock_guard<mutex> lockguard(lock);
+	lock_guard<mutex> lockguard(sendLock);
 	for (auto& player : _players)
 	{
 		player.second->ownerSession->Send(sendBuffer);
@@ -62,7 +62,7 @@ void Room::Broadcast(BYTE* sendBuffer)
 void Room::BroadcastWithOutMe(int objectId, BYTE* sendBuffer)
 {
 	//자신을 제외한 브로드캐스트
-	lock_guard<mutex> lockguard(lock);
+	lock_guard<mutex> lockguard(sendLock);
 	for (auto& player : _players)
 	{
 		if (player.first != objectId)
@@ -75,7 +75,7 @@ void Room::BroadcastWithOutMe(int objectId, BYTE* sendBuffer)
 void Room::SendRoomInfo(int objectId, BYTE* sendBuffer, int bufferOffset)
 {
 	{
-		lock_guard<mutex> lockguard(lock);
+		lock_guard<mutex> lockguard(sendLock);
 		unsigned int PlayerCount = _players.size() - 1;
 
 		memcpy(sendBuffer + bufferOffset, &PlayerCount, sizeof(PlayerCount));
@@ -103,18 +103,16 @@ void Room::Update()
 	{
 		skill.second->Update();
 	}
+	for (auto monster : _monsters)
+	{
+		monster.second->Update();
+	}
 }
 
-void Room::AddCollision(Collider* collider, int Group)
-{
-	lock_guard<mutex> lockguard(lock);
-	//colliderObjects[Group].push_back(collider);
-}
-
-void Room::CollisionToPlayer(Skill* skill, OUT vector<int>& collisionId)
+void Room::CollisionToPlayer(Skill* skill, OUT vector<Object*>& collisionId)
 {
 	//데드락..
-	lock_guard<mutex> lockguard(lock2);
+	lock_guard<mutex> lockguard(collisionLock);
 	for (auto player : _players)
 	{
 		//스킬을 시전한 플레이어는 제외
@@ -132,7 +130,7 @@ void Room::CollisionToPlayer(Skill* skill, OUT vector<int>& collisionId)
 		if (IsCollisionAABB(*Sour, *Dest))
 		{
 			cout << player.first << "번 플레이어와 " << skill->ObjectId << "번 스킬 충돌" << endl;
-			collisionId.push_back(player.first);
+			collisionId.push_back(player.second);
 		}
 	}
 }
@@ -165,9 +163,3 @@ Object* Room::FindSkillById(int id)
 	}
 	return nullptr;
 }
-
-//list<Collider*>* Room::GetColliderObjects(int Group)
-//{
-//	lock_guard<mutex> lockguard(lock);
-//	return &colliderObjects[Group];
-//}

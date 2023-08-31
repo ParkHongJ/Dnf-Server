@@ -4,6 +4,7 @@
 #include "HierarchyNode.h"
 #include "../Default/ServerManager.h"
 #include "Effect.h"
+#include "CUIManager.h"
 CPlayer::CPlayer(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: CGameObject(pDevice, pContext)
 {
@@ -154,6 +155,18 @@ HRESULT CPlayer::Render()
 	RELEASE_INSTANCE(CGameInstance);
 
 	return S_OK;
+}
+
+void CPlayer::OnDamaged(CGameObject* attacker, float fDamage)
+{
+	if (bLocallyControlled)
+	{
+		CUIManager::Instance->SetHP(fDamage);
+	}
+	else
+	{
+		//다른 hp갱신
+	}
 }
 
 void CPlayer::AddColliderPacket()

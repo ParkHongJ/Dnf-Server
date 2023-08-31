@@ -211,6 +211,10 @@ HRESULT CLoader::Loading_ForGamePlayLevel()
 		CTexture::Create(m_pDevice, m_pContext, TEXT("../Bin/Resources/Textures/Explosion/Explosion%d.png"), 90))))
 		return E_FAIL;
 
+	if (FAILED(pGameInstance->Add_Prototype(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Texture_HP"),
+		CTexture::Create(m_pDevice, m_pContext, TEXT("../Bin/Resources/Textures/PVPUI/TestHP/1.png"), 1))))
+		return E_FAIL;
+	//Textures\PVPUI\TestHP
 
 	lstrcpy(m_szLoadingText, TEXT("모델을 로딩중입니다. "));
 	/* 모델를 로드한다. */

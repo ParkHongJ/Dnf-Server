@@ -49,7 +49,7 @@ public:
 	virtual void Tick(_float fTimeDelta);
 	virtual void LateTick(_float fTimeDelta);
 	virtual HRESULT Render();
-
+	virtual void OnDamaged(CGameObject* attacker, float fDamage) override;
 public:
 	void AddColliderPacket();
 	void SetLocallyControlled(_bool LocallyControlled) { bLocallyControlled = LocallyControlled; };

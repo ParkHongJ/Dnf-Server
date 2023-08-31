@@ -3,7 +3,7 @@
 #include "GameInstance.h"
 
 //IMPLEMENT_SINGLETON(CUIManager)
-
+CUIManager* CUIManager::Instance = nullptr;
 CUIManager::CUIManager(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	: CGameObject(pDevice, pContext)
 {
@@ -73,6 +73,11 @@ HRESULT CUIManager::Ready_Components()
 	/* For.Com_Texture */
 	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Texture_MainUI"), TEXT("Com_Texture"), (CComponent**)&m_pTextureCom)))
 		return E_FAIL;
+	
+	/* For.Com_Texture */
+	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Texture_HP"), TEXT("Com_Texture2"), (CComponent**)&m_pTextureHPCom)))
+		return E_FAIL;
+
 	return S_OK;
 }
 void CUIManager::HPRender()
@@ -85,6 +90,9 @@ void CUIManager::HPRender()
 	m_pShaderCom->Set_RawValue("g_WorldMatrix", &m_pTransformCom->Get_WorldFloat4x4_TP(), sizeof(_float4x4));
 	m_pShaderCom->Set_RawValue("g_ViewMatrix", &m_ViewMatrix, sizeof(_float4x4));
 	m_pShaderCom->Set_RawValue("g_ProjMatrix", &m_ProjMatrix, sizeof(_float4x4));
+	
+	_float percentage = fPlayerHP / fPlayerMaxHP;
+	m_pShaderCom->Set_RawValue("percentage", &percentage, sizeof(_float));
 
 	if (FAILED(pGameInstance->Bind_RenderTargetSRV(TEXT("Target_Depth"), m_pShaderCom, "g_DepthTexture")))
 		return;
@@ -94,7 +102,7 @@ void CUIManager::HPRender()
 	if (FAILED(m_pTextureCom->Set_SRV(m_pShaderCom, "g_DiffuseTexture", UI_TYPE::HP)))
 		return;
 
-	if (FAILED(m_pShaderCom->Begin(1)))
+	if (FAILED(m_pShaderCom->Begin(3)))
 		return;
 
 	if (FAILED(m_pVIBufferCom->Render()))
@@ -111,6 +119,9 @@ void CUIManager::MPRender()
 	m_pShaderCom->Set_RawValue("g_ViewMatrix", &m_ViewMatrix, sizeof(_float4x4));
 	m_pShaderCom->Set_RawValue("g_ProjMatrix", &m_ProjMatrix, sizeof(_float4x4));
 
+	_float percentage = fPlayerMP / fPlayerMaxMP;
+	m_pShaderCom->Set_RawValue("percentage", &percentage, sizeof(_float));
+
 	if (FAILED(pGameInstance->Bind_RenderTargetSRV(TEXT("Target_Depth"), m_pShaderCom, "g_DepthTexture")))
 		return;
 
@@ -119,7 +130,7 @@ void CUIManager::MPRender()
 	if (FAILED(m_pTextureCom->Set_SRV(m_pShaderCom, "g_DiffuseTexture", UI_TYPE::MP)))
 		return;
 
-	if (FAILED(m_pShaderCom->Begin(1)))
+	if (FAILED(m_pShaderCom->Begin(3)))
 		return;
 
 	if (FAILED(m_pVIBufferCom->Render()))
@@ -154,22 +165,28 @@ void CUIManager::SkillRender()
 {
 }
 
+void CUIManager::SetHP(_float hp)
+{
+	fPlayerHP = hp;
+}
+
 CGameObject* CUIManager::Clone(void* pArg)
 {
 	CUIManager* pInstance = new CUIManager(*this);
-
 	if (FAILED(pInstance->Initialize(pArg)))
 	{
 		MSG_BOX(TEXT("Failed To Cloned : CUIManager"));
 		Safe_Release(pInstance);
 	}
 
+	Instance = pInstance;
 	return pInstance;
 }
 
 void CUIManager::Free()
 {
 	Safe_Release(m_pTextureCom);
+	Safe_Release(m_pTextureHPCom);
 	Safe_Release(m_pShaderCom);
 	Safe_Release(m_pVIBufferCom);
 	Safe_Release(m_pRendererCom);

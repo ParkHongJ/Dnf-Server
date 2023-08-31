@@ -26,7 +26,7 @@ public:
 	virtual void Tick(_float fTimeDelta);
 	virtual void LateTick(_float fTimeDelta);
 	virtual HRESULT Render();
-
+	virtual void OnDamaged(CGameObject* attacker, float fDamage) {};
 
 public:
 	virtual HRESULT SetUp_State(_fmatrix StateMatrix) { return S_OK; }

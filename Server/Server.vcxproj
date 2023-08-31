@@ -161,6 +161,7 @@
     <ClCompile Include="DnfServer.cpp" />
     <ClCompile Include="Listener.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Monster.cpp" />
     <ClCompile Include="NetAddress.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="Player.cpp" />
@@ -173,6 +174,7 @@
     <ClInclude Include="CollisionThread.h" />
     <ClInclude Include="DnfServer.h" />
     <ClInclude Include="Listener.h" />
+    <ClInclude Include="Monster.h" />
     <ClInclude Include="NetAddress.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="Packet.h" />

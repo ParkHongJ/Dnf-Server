@@ -46,8 +46,17 @@ public:
 	void BackgroundRender();
 	void SkillRender();
 
+	_float fPlayerHP = 100.f;
+	_float fPlayerMaxHP = 100.f;
+	_float fPlayerMP = 100.f;
+	_float fPlayerMaxMP = 100.f;
+
+	void SetHP(_float hp);
+
+	static CUIManager* Instance;
 private:
 	CTexture* m_pTextureCom = nullptr;
+	CTexture* m_pTextureHPCom = nullptr;
 	CShader* m_pShaderCom = nullptr;
 	CVIBuffer_Rect* m_pVIBufferCom = nullptr;
 	CRenderer* m_pRendererCom = nullptr;

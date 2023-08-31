@@ -23,17 +23,19 @@ public:
 	void SendRoomInfo(int objectId, BYTE* sendBuffer, int bufferOffset);
 
 	void Update();
-	void AddCollision(Collider* collider, int Group);
 
-	void CollisionToPlayer(Skill* skill, vector<int>& collisionId);
+	void CollisionToPlayer(Skill* skill, vector<Object*>& collisionId);
+	void CollisionToMonster(Skill* skill, vector<Object*>& collisionId);
 	Object* FindPlayerById(int id);
 	Object* FindSkillById(int id);
-	//list<Collider*>* GetColliderObjects(int Group);
+
 private:
 	mutex lock;
-	mutex lock2;
+	mutex collisionLock;
+	mutex sendLock;
 	map<uint64, Object*> _players;
 	map<uint64, Skill*> _skills;
+	map<uint64, Object*> _monsters;
 };
 
 extern Room GRoom;
