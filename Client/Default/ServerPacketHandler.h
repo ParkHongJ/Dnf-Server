@@ -15,6 +15,7 @@ bool Handle_S_MOVE(SOCKET socket, BYTE* buffer);
 bool Handle_S_EXIT(SOCKET socket, BYTE* buffer);
 bool Handle_S_SKILL(SOCKET socket, BYTE* buffer);
 bool Handle_S_CHANGE_HP(SOCKET socket, BYTE* buffer);
+bool Handle_S_MONSTER_CONTROL(SOCKET socket, BYTE* buffer);
 
 class ServerPacketHandler
 {
@@ -52,6 +53,10 @@ public:
         GPacketHandler[PKT_S_CHANGE_HP] = [](SOCKET socket, BYTE* buffer, INT32 len)
         {
             return Handle_S_CHANGE_HP(socket, buffer);
+        };
+        GPacketHandler[PKT_S_MONSTER_CONTROL] = [](SOCKET socket, BYTE* buffer, INT32 len)
+        {
+            return Handle_S_MONSTER_CONTROL(socket, buffer);
         };
     }
     static bool HandlePacket(SOCKET socket, BYTE* buffer, INT32 len);

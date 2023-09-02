@@ -28,12 +28,6 @@ HRESULT CLevel_GamePlay::Initialize()
 	if (FAILED(Ready_Layer_Player(TEXT("Layer_Player"))))
 		return E_FAIL;
 
-	/*if (FAILED(Ready_Layer_Monster(TEXT("Layer_Monster"))))
-		return E_FAIL;*/
-
-	/*if (FAILED(Ready_Layer_Effect(TEXT("Layer_Effect"))))
-		return E_FAIL;*/
-
 	if (FAILED(Ready_Layer_UI(TEXT("Layer_UI"))))
 		return E_FAIL;
 
@@ -47,7 +41,6 @@ HRESULT CLevel_GamePlay::Initialize()
 
 	*(PacketHeader*)packet = header;
 	_int characterIndex = 0;
-	//int id = ServerMgr->GetClientId();
 
 	memcpy(packet + sizeof(PacketHeader), &characterIndex, sizeof(characterIndex));
 	ServerMgr->Send(packet, header.size);

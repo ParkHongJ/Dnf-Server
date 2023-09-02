@@ -67,6 +67,10 @@ void Room::Leave(Object* object)
 	{
 		_projectiles.erase(object->ObjectId);
 	}
+	else if (object->type == MONSTER)
+	{
+		_monsters.erase(object->ObjectId);
+	}
 }
 
 void Room::Broadcast(BYTE* sendBuffer)

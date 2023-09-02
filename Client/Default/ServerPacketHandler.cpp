@@ -265,3 +265,30 @@ bool Handle_S_CHANGE_HP(SOCKET socket, BYTE* buffer)
 
 	return true;
 }
+
+bool Handle_S_MONSTER_CONTROL(SOCKET socket, BYTE* buffer)
+{
+	int bufferOffset = sizeof(PacketHeader);
+
+	int id;
+	memcpy(&id, buffer + bufferOffset, sizeof(id));
+
+	bufferOffset += sizeof(id);
+
+	_float3 vPos;
+
+	memcpy(&vPos, buffer + bufferOffset, sizeof(vPos));
+	bufferOffset += sizeof(vPos);
+
+	int NewState;
+
+	memcpy(&NewState, buffer + bufferOffset, sizeof(NewState));
+	bufferOffset += sizeof(NewState);
+
+
+	ServerManager* ServerMgr = ServerManager::GetInstance();
+	CMonster* object = (CMonster*)ServerMgr->FindGameObjectById(id);
+	object->UpdateMove(vPos, NewState);
+
+	return true;
+}

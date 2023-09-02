@@ -35,6 +35,9 @@
     <ClCompile Include="Monster.cpp">
       <Filter>Contents\Object\Monster</Filter>
     </ClCompile>
+    <ClCompile Include="Projectile.cpp">
+      <Filter>Contents\Object\Projectile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ServerCore">
@@ -79,6 +82,9 @@
     <Filter Include="Contents\Object\Player">
       <UniqueIdentifier>{ac2fa34a-f2bc-41b1-b0e2-e254df24419e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Contents\Object\Projectile">
+      <UniqueIdentifier>{5ad27ac9-4813-48fd-8a1a-1485e56b66f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Packet.h">
@@ -122,6 +128,9 @@
     </ClInclude>
     <ClInclude Include="Monster.h">
       <Filter>Contents\Object\Monster</Filter>
+    </ClInclude>
+    <ClInclude Include="Projectile.h">
+      <Filter>Contents\Object\Projectile</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

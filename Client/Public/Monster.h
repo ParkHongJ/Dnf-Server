@@ -13,8 +13,21 @@ class CVIBuffer_Rect;
 class CPipeLine;
 END
 
+enum MONSTER_DIR
+{
+	M_LEFT,
+	M_RIGHT
+};
+enum MONSTER_STATE
+{
+	M_Idle = 0,
+	M_Chase,
+	M_Attack,
+	M_Dead,
+	M_Hit,
+	M_End
+};
 BEGIN(Client)
-
 class CMonster final : public CGameObject
 {
 private:
@@ -29,9 +42,18 @@ public:
 	virtual void LateTick(_float fTimeDelta);
 	virtual HRESULT Render();
 
+	virtual void OnDamaged(CGameObject* attacker, float damage) override;
 	void AddColliderPacket();
 	void RenderHP();
+	void UpdateMove(_float3 vPos, int NewState);
 
+	void IdleTick(_float fTimeDelta);
+	void ChaseTick(_float fTimeDelta);
+	void AttackTick(_float fTimeDelta);
+	void DeadTick(_float fTimeDelta);
+	void HitTick(_float fTimeDelta);
+	void PlayAnimation(_float fTimeDelta);
+	void UpdateState(MONSTER_STATE NewState);
 private:
 	CShader* m_pShaderCom = nullptr;
 	CTexture* m_pTextureCom = nullptr;
@@ -45,9 +67,13 @@ private:
 private:
 	HRESULT Ready_Components();
 
-	_float fHp;
-	_float m_fFrame;
-
+	_float fHp = 100.f;
+	_float m_fFrame = 21.f;
+	MONSTER_DIR m_eDir = MONSTER_DIR::M_RIGHT;
+	MONSTER_STATE m_eState = MONSTER_STATE::M_Idle;
+	_float3 vDestPos;
+	_float fSpeed = 0.05f;
+	_bool bAnimEnd = false;
 public:
 	static CMonster* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	virtual CGameObject* Clone(void* pArg);

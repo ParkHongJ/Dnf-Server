@@ -174,7 +174,7 @@ void CPlayer::OnDamaged(CGameObject* attacker, float fDamage)
 	else
 	{
 		//다른 hp갱신
-		fHp -= fDamage;
+		fHp = fDamage;
 	}
 }
 
@@ -931,8 +931,9 @@ void CPlayer::CloneHPRender()
 	if (!bLocallyControlled)
 	{
 		CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
-		m_pTransformHPCom->Set_Scale(XMVectorSet(0.074f, 0.005f, 1.f, 0.f));
-		
+
+		m_pTransformHPCom->Set_Scale(XMVectorSet(0.148f, 0.01f, 1.f, 0.f));
+
 		_vector vPos = m_pTransformCom->Get_State(CTransform::STATE_POSITION);
 
 		m_pTransformHPCom->Set_State(CTransform::STATE_POSITION, XMVectorSet(XMVectorGetX(vPos), XMVectorGetY(vPos) + 0.085f, 0.f, 1.f));
