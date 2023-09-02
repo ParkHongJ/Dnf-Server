@@ -6,6 +6,7 @@
 #include "GameObject.h"
 #include "ServerManager.h"
 #include "Player.h"
+#include "Monster.h"
 
 PacketHandlerFunc GPacketHandler[UINT16_MAX];
 
@@ -71,6 +72,31 @@ bool Handle_S_ENTER_GAME(SOCKET socket, BYTE* buffer)
 
 			ServerMgr->AddGameObject(id, pGameObject);
 		}		
+	}
+
+	unsigned int MonsterCount;
+
+	memcpy(&MonsterCount, buffer + bufferOffset, sizeof(MonsterCount));
+
+	bufferOffset += sizeof(MonsterCount);
+
+	for (unsigned int i = 0; i < MonsterCount; i++)
+	{
+		int id;
+		memcpy(&id, buffer + bufferOffset, sizeof(id));
+		bufferOffset += sizeof(id);
+
+		CGameObject* pGameObject = pGameInstance->Add_GameObjectToLayer(TEXT("Prototype_GameObject_Monster"), LEVEL_GAMEPLAY, TEXT("Layer_Player"));
+
+		if (pGameObject != nullptr)
+		{
+			pGameObject->SetId(id);
+			ServerManager* ServerMgr = ServerManager::GetInstance();
+
+			ServerMgr->AddGameObject(id, pGameObject);
+			CMonster* Monster = (CMonster*)pGameObject;
+			Monster->AddColliderPacket();
+		}
 	}
 
 	BYTE packet[PACKET_SIZE] = "";

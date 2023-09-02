@@ -36,7 +36,7 @@ void CCamera_Free::Tick(_float fTimeDelta)
 	CGameInstance*		pGameInstance = CGameInstance::Get_Instance();
 	Safe_AddRef(pGameInstance);
 
-	if (pGameInstance->Get_DIKState(DIK_W) & 0x80)
+	/*if (pGameInstance->Get_DIKState(DIK_W) & 0x80)
 	{
 		m_pTransformCom->Go_Straight(fTimeDelta);
 	}
@@ -54,7 +54,7 @@ void CCamera_Free::Tick(_float fTimeDelta)
 	if (pGameInstance->Get_DIKState(DIK_D) & 0x80)
 	{
 		m_pTransformCom->Go_Right(fTimeDelta);
-	}
+	}*/
 
 	_long	MouseMove = 0;
 

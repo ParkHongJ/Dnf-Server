@@ -5,6 +5,7 @@ texture2D	g_DiffuseTexture;
 texture2D	g_DepthTexture;
 
 float percentage;
+float percentage2;
 
 sampler DefaultSampler = sampler_state {
 
@@ -132,6 +133,21 @@ PS_OUT PS_MAIN_HPMP(PS_IN_SOFTEFFECT In)
 	return Out;
 }
 
+PS_OUT PS_MAIN_HPMP_PLAYER(PS_IN_SOFTEFFECT In)
+{
+	PS_OUT		Out = (PS_OUT)0;
+
+	Out.vColor = g_DiffuseTexture.Sample(DefaultSampler, In.vTexUV);
+
+	if (0 == Out.vColor.a)
+		discard;
+
+	if (In.vTexUV.x > percentage2)
+		discard;
+
+	return Out;
+}
+
 technique11 DefaultTechnique
 {
 	pass DefaultPass
@@ -177,5 +193,14 @@ technique11 DefaultTechnique
 		GeometryShader = NULL;
 		PixelShader = compile ps_5_0 PS_MAIN_HPMP();
 	}
-	
+	pass HPMPPLAYER
+	{
+		SetRasterizerState(RS_Default);
+		SetDepthStencilState(DSS_Default, 0);
+		SetBlendState(BS_AlphaBlend, float4(0.f, 0.f, 0.f, 0.f), 0xffffffff);
+
+		VertexShader = compile vs_5_0 VS_MAIN_SOFTEFFECT();
+		GeometryShader = NULL;
+		PixelShader = compile ps_5_0 PS_MAIN_HPMP_PLAYER();
+	}
 }

@@ -3,7 +3,7 @@
 #include "Player.h"
 #include "Room.h"
 #include "DnfServer.h"
-#include "Skill.h"
+#include "Projectile.h"
 #include "CollisionThread.h"
 PacketHandlerFunc GPacketHandler[UINT16_MAX];
 
@@ -164,6 +164,12 @@ bool Handle_C_EXIT(Session* session, BYTE* buffer)
 
 bool Handle_C_SKILL(Session* session, BYTE* buffer)
 {
+    //누가 스킬을 썼는지
+    //스킬을 어디에 썼는지
+    //어떤 스킬을 썼는지
+    
+    //스킬의 범위는 얼마인지 = 서버
+
     int bufferOffset = sizeof(PacketHeader);
 
     int id;
@@ -172,58 +178,15 @@ bool Handle_C_SKILL(Session* session, BYTE* buffer)
 
     bufferOffset += sizeof(int);
 
-    float vPos[3];
-
-    memcpy(&vPos, buffer + bufferOffset, sizeof(float) * 3);
-
-    bufferOffset += sizeof(float) * 3;
-
-    Skill* skill = new Skill();
-    Object* Owner = GRoom.FindPlayerById(id);
-
-    if (Owner == nullptr)
+    Player* player = dynamic_cast<Player*>(GRoom.FindPlayerById(id));
+    
+    if (player == nullptr)
+    {
+        cout << "스킬 시전자 방에 없음" << endl;
         return false;
+    }
 
-    skill->ObjectId = DnfServer::idGenerator++;
-    skill->type = SKILL;
-    skill->ownerSession = session;
-    skill->Owner = Owner;
-    skill->x = vPos[0];
-    skill->y = vPos[1];
-    skill->z = vPos[2];
-
-    GRoom.Enter(skill);
-
-    cout << id << " 번 플레이어가 스킬 사용" << endl;
-    cout << "스킬 위치 : " << vPos[0] << " " << vPos[1] << " " << vPos[2] << endl;
-    
-    BYTE sendBuffer[PACKET_SIZE] = "";
-
-    PacketHeader header;
-    header.protocol = PKT_S_SKILL;
-    header.size = PACKET_SIZE;
-
-    int sendBufferOffset = sizeof(PacketHeader);
-
-    *(PacketHeader*)sendBuffer = header;
-
-    //몇번 플레이어가
-    memcpy(sendBuffer + sendBufferOffset, &Owner->ObjectId, sizeof(Owner->ObjectId));
-    
-    sendBufferOffset += sizeof(Owner->ObjectId);
-
-    //스킬 id
-    memcpy(sendBuffer + sendBufferOffset, &skill->ObjectId, sizeof(skill->ObjectId));
-
-    sendBufferOffset += sizeof(skill->ObjectId);
-
-    //어디에
-    memcpy(sendBuffer + sendBufferOffset, &vPos, sizeof(float) * 3);
-
-    sendBufferOffset += sizeof(float) * 3;
-
-    GRoom.Broadcast(sendBuffer);
-
+    GRoom.HandleSkill(player, buffer);
     return true;
 }
 
@@ -252,6 +215,10 @@ bool Handle_C_ADD_COLLIDER(Session* session, BYTE* buffer)
     else if (type == Type::SKILL)
     {
         object = GRoom.FindSkillById(id); //Lock
+    }
+    else if (type == Type::MONSTER)
+    {
+        object = GRoom.FindMonsterById(id); //Lock
     }
 
     if (object == nullptr)

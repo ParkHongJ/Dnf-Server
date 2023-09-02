@@ -167,6 +167,7 @@
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Room.cpp" />
     <ClCompile Include="Session.cpp" />
+    <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="Skill.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -182,6 +183,7 @@
     <ClInclude Include="Room.h" />
     <ClInclude Include="Server_Defines.h" />
     <ClInclude Include="Session.h" />
+    <ClInclude Include="Projectile.h" />
     <ClInclude Include="Skill.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>

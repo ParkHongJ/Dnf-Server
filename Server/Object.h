@@ -4,7 +4,8 @@ enum Type
 {
     PLAYER = 0,
     MONSTER,
-    SKILL
+    SKILL,
+    PROJECTILE
 };
 struct StatInfo
 {

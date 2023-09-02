@@ -107,7 +107,7 @@ HRESULT CEffect::Ready_Components()
 	CCollider::COLLIDERDESC		ColliderDesc;
 	ZeroMemory(&ColliderDesc, sizeof(CCollider::COLLIDERDESC));
 
-	ColliderDesc.vSize = _float3(0.15f, 0.15f, 0.05f);
+	ColliderDesc.vSize = _float3(0.2f, 0.2f, 0.05f);
 	ColliderDesc.vCenter = _float3(0.f, 0.f, 0.f);
 	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Collider_AABB"), TEXT("Com_AABB"), (CComponent**)&m_pColliderCom, &ColliderDesc)))
 		return E_FAIL;

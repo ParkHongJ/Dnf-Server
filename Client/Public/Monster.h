@@ -7,17 +7,16 @@ BEGIN(Engine)
 class CShader;
 class CTexture;
 class CRenderer;
-class CCollider;
 class CTransform;
-class CModel;
+class CCollider;
+class CVIBuffer_Rect;
+class CPipeLine;
 END
 
 BEGIN(Client)
 
 class CMonster final : public CGameObject
 {
-public:
-	enum COLLIDERTYPE { COLLIDERTYPE_AABB, COLLIDERTYPE_OBB, COLLIDERTYPE_SPHERE, COLLILDERTYPE_END };
 private:
 	CMonster(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	CMonster(const CMonster& rhs);
@@ -30,19 +29,24 @@ public:
 	virtual void LateTick(_float fTimeDelta);
 	virtual HRESULT Render();
 
+	void AddColliderPacket();
+	void RenderHP();
+
 private:
-	CShader*				m_pShaderCom = nullptr;
-
-	CRenderer*				m_pRendererCom = nullptr;
-	CTransform*				m_pTransformCom = nullptr;
-	CModel*					m_pModelCom = nullptr;
-	CCollider*				m_pColliderCom[COLLILDERTYPE_END] = { nullptr };
-
-
+	CShader* m_pShaderCom = nullptr;
+	CTexture* m_pTextureCom = nullptr;
+	CTexture* m_pTextureHPCom = nullptr;
+	CVIBuffer_Rect* m_pVIBufferCom = nullptr;
+	CRenderer* m_pRendererCom = nullptr;
+	CTransform* m_pTransformCom = nullptr;
+	CCollider* m_pColliderCom = nullptr;
+	CTransform* m_pTransformHPCom = nullptr;
 
 private:
 	HRESULT Ready_Components();
-	_bool Collision_ToPlayer();
+
+	_float fHp;
+	_float m_fFrame;
 
 public:
 	static CMonster* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);

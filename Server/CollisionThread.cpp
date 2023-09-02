@@ -121,3 +121,22 @@ void Collider::UpdateMinMax()
         WorldMax[i] = ColliderPos[i] + Size[i] / 2.f;
     }
 }
+
+void Collider::UpdateMinMax(float* vPos)
+{
+    if (Owner == nullptr)
+        return;
+
+    //Owner의 위치가 갱신이 되었다고 가정하고,
+
+    float ColliderPos[3];
+    ColliderPos[0] = vPos[0] + Center[0];
+    ColliderPos[1] = vPos[1] + Center[1];
+    ColliderPos[2] = vPos[2] + Center[2];
+
+    for (int i = 0; i < 3; i++)
+    {
+        WorldMin[i] = ColliderPos[i] - Size[i] / 2.f;
+        WorldMax[i] = ColliderPos[i] + Size[i] / 2.f;
+    }
+}

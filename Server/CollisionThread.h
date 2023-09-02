@@ -26,6 +26,7 @@ public:
 
     //AABB박스의 min, max를 업데이트 하는 함수
     void UpdateMinMax();
+    void UpdateMinMax(float* vPos);
 };
 
 void CollisionLoop(int Row, int Col, list<Collider>* CollisionObjects, unordered_map<LONGLONG, bool>& ColliderInfo);

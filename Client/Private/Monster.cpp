@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "..\Public\Monster.h"
 #include "GameInstance.h"
-
+#include "../Default/ServerManager.h"
 CMonster::CMonster(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: CGameObject(pDevice, pContext)
 {
@@ -22,30 +22,18 @@ HRESULT CMonster::Initialize(void * pArg)
 	if (FAILED(Ready_Components()))
 		return E_FAIL;
 
-	m_pModelCom->Set_AnimIndex(rand() % 20);
-
-	m_pTransformCom->Set_State(CTransform::STATE_POSITION, XMVectorSet(_float(rand() % 10), 0.f, _float(rand() % 10), 1.f));
-	
 	return S_OK;
 }
 
 void CMonster::Tick(_float fTimeDelta)
 {
-	for (auto& pCollider : m_pColliderCom)
-	{
-		if (nullptr != pCollider)
-			pCollider->Update(m_pTransformCom->Get_WorldMatrix());
-	}
+	m_pColliderCom->Update(m_pTransformCom->Get_WorldMatrix());
 }
 
 void CMonster::LateTick(_float fTimeDelta)
 {
 	if (nullptr == m_pRendererCom)
 		return;
-
-	Collision_ToPlayer();
-
-	m_pModelCom->Play_Animation(fTimeDelta);
 
 	CGameInstance*		pGameInstance = GET_INSTANCE(CGameInstance);
 
@@ -58,11 +46,7 @@ void CMonster::LateTick(_float fTimeDelta)
 		m_pRendererCom->Add_RenderGroup(CRenderer::RENDER_NONALPHABLEND, this);
 
 #ifdef _DEBUG
-        for (_uint i = 0; i < COLLILDERTYPE_END; ++i)
-		{
-			if (nullptr != m_pColliderCom[i])
-				m_pRendererCom->Add_DebugGroup(m_pColliderCom[i]);
-		}
+		m_pRendererCom->Add_DebugGroup(m_pColliderCom);
 #endif // _DEBUG
 	}
 
@@ -70,11 +54,10 @@ void CMonster::LateTick(_float fTimeDelta)
 
 HRESULT CMonster::Render()
 {
-	if (nullptr == m_pModelCom ||
-		nullptr == m_pShaderCom)
+	if (nullptr == m_pShaderCom)
 		return E_FAIL;
 
-	CGameInstance*		pGameInstance = GET_INSTANCE(CGameInstance);
+	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
 
 	if (FAILED(m_pShaderCom->Set_RawValue("g_WorldMatrix", &m_pTransformCom->Get_WorldFloat4x4_TP(), sizeof(_float4x4))))
 		return E_FAIL;
@@ -83,29 +66,91 @@ HRESULT CMonster::Render()
 	if (FAILED(m_pShaderCom->Set_RawValue("g_ProjMatrix", &pGameInstance->Get_TransformFloat4x4_TP(CPipeLine::D3DTS_PROJ), sizeof(_float4x4))))
 		return E_FAIL;
 
-	RELEASE_INSTANCE(CGameInstance);
+	if (FAILED(pGameInstance->Bind_RenderTargetSRV(TEXT("Target_Depth"), m_pShaderCom, "g_DepthTexture")))
+		return E_FAIL;
 
+	if (FAILED(m_pTextureCom->Set_SRV(m_pShaderCom, "g_DiffuseTexture", _uint(0))))
+		return E_FAIL;
 
+	if (FAILED(m_pShaderCom->Begin(2)))
+		return E_FAIL;
 
-	_uint		iNumMeshes = m_pModelCom->Get_NumMeshes();
-
-	for (_uint i = 0; i < iNumMeshes; ++i)
-	{	
-		if (FAILED(m_pModelCom->SetUp_OnShader(m_pShaderCom, m_pModelCom->Get_MaterialIndex(i), aiTextureType_DIFFUSE, "g_DiffuseTexture")))
-			return E_FAIL;
-		/*if (FAILED(m_pModelCom->SetUp_OnShader(m_pShaderCom, m_pModelCom->Get_MaterialIndex(i), aiTextureType_NORMALS, "g_NormalTexture")))
-			return E_FAIL;*/
-
-
-		if (FAILED(m_pModelCom->Render(m_pShaderCom, i)))
-			return E_FAIL;
-	}	
+	if (FAILED(m_pVIBufferCom->Render()))
+		return E_FAIL;
 
 #ifdef _DEBUG
-
+	m_pColliderCom->Render();
 #endif
+	RELEASE_INSTANCE(CGameInstance);
 
+	RenderHP();
 	return S_OK;
+}
+
+void CMonster::AddColliderPacket()
+{
+	BYTE sendBuffer[PACKET_SIZE] = "";
+
+	PacketHeader header;
+	header.protocol = PKT_C_ADD_COLLIDER;
+	header.size = PACKET_SIZE;
+
+	*(PacketHeader*)sendBuffer = header;
+
+	int bufferOffset = sizeof(PacketHeader);
+
+	memcpy(sendBuffer + bufferOffset, &m_iId, sizeof(m_iId));
+
+	bufferOffset += sizeof(m_iId);
+
+	Type type = Type::MONSTER	;
+
+	memcpy(sendBuffer + bufferOffset, &type, sizeof(type));
+
+	bufferOffset += sizeof(type);
+
+	CCollider::COLLIDERDESC ColliderDesc = m_pColliderCom->GetColliderDesc();
+
+	memcpy(sendBuffer + bufferOffset, &ColliderDesc.vSize, sizeof(ColliderDesc.vSize));
+
+	bufferOffset += sizeof(ColliderDesc.vSize);
+
+	memcpy(sendBuffer + bufferOffset, &ColliderDesc.vCenter, sizeof(ColliderDesc.vCenter));
+
+	bufferOffset += sizeof(ColliderDesc.vCenter);
+
+	ServerManager* ServerMgr = ServerManager::GetInstance();
+	ServerMgr->Send(sendBuffer, PACKET_SIZE);
+}
+
+void CMonster::RenderHP()
+{
+	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
+	m_pTransformHPCom->Set_Scale(XMVectorSet(0.074f, 0.005f, 1.f, 0.f));
+
+	_vector vPos = m_pTransformCom->Get_State(CTransform::STATE_POSITION);
+
+	m_pTransformHPCom->Set_State(CTransform::STATE_POSITION, XMVectorSet(XMVectorGetX(vPos), XMVectorGetY(vPos) + 0.085f, 0.f, 1.f));
+
+	float percentage2 = fHp / 100.f;
+	m_pShaderCom->Set_RawValue("percentage2", &percentage2, sizeof(_float));
+	m_pShaderCom->Set_RawValue("g_WorldMatrix", &m_pTransformHPCom->Get_WorldFloat4x4_TP(), sizeof(_float4x4));
+	m_pShaderCom->Set_RawValue("g_ViewMatrix", &pGameInstance->Get_TransformFloat4x4_TP(CPipeLine::D3DTS_VIEW), sizeof(_float4x4));
+	m_pShaderCom->Set_RawValue("g_ProjMatrix", &pGameInstance->Get_TransformFloat4x4_TP(CPipeLine::D3DTS_PROJ), sizeof(_float4x4));
+
+	if (FAILED(pGameInstance->Bind_RenderTargetSRV(TEXT("Target_Depth"), m_pShaderCom, "g_DepthTexture")))
+		return;
+
+	if (FAILED(m_pTextureHPCom->Set_SRV(m_pShaderCom, "g_DiffuseTexture", 0)))
+		return;
+
+	if (FAILED(m_pShaderCom->Begin(4)))
+		return;
+
+	if (FAILED(m_pVIBufferCom->Render()))
+		return;
+
+	RELEASE_INSTANCE(CGameInstance);
 }
 
 HRESULT CMonster::Ready_Components()
@@ -113,60 +158,41 @@ HRESULT CMonster::Ready_Components()
 	/* For.Com_Transform */
 	if (FAILED(__super::Add_Component(LEVEL_STATIC, TEXT("Prototype_Component_Transform"), TEXT("Com_Transform"), (CComponent**)&m_pTransformCom)))
 		return E_FAIL;
+	/* For.Com_Transform */
+	if (FAILED(__super::Add_Component(LEVEL_STATIC, TEXT("Prototype_Component_Transform"), TEXT("Com_Transform2"), (CComponent**)&m_pTransformHPCom)))
+		return E_FAIL;
 
 	/* For.Com_Renderer */
 	if (FAILED(__super::Add_Component(LEVEL_STATIC, TEXT("Prototype_Component_Renderer"), TEXT("Com_Renderer"), (CComponent**)&m_pRendererCom)))
 		return E_FAIL;
 		
 	/* For.Com_Shader */
-	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Shader_AnimModel"), TEXT("Com_Shader"), (CComponent**)&m_pShaderCom)))
+	if (FAILED(__super::Add_Component(LEVEL_STATIC, TEXT("Prototype_Component_Shader_VtxTex"), TEXT("Com_Shader"), (CComponent**)&m_pShaderCom)))
 		return E_FAIL;
 
-	/* For.Com_Model */
-	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Model_Fiona"), TEXT("Com_Model"), (CComponent**)&m_pModelCom)))
+	/* For.Com_VIBuffer */
+	if (FAILED(__super::Add_Component(LEVEL_STATIC, TEXT("Prototype_Component_VIBuffer_Rect"), TEXT("Com_VIBuffer"), (CComponent**)&m_pVIBufferCom)))
 		return E_FAIL;
 
+	/* For.Com_Texture */
+	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Texture_Monster"), TEXT("Com_Texture"), (CComponent**)&m_pTextureCom)))
+		return E_FAIL;
+
+	/* For.Com_Texture */
+	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Texture_HP"), TEXT("Com_Texture2"), (CComponent**)&m_pTextureHPCom)))
+		return E_FAIL;
 
 	/* For.Com_AABB */
 	CCollider::COLLIDERDESC		ColliderDesc;
 	ZeroMemory(&ColliderDesc, sizeof(CCollider::COLLIDERDESC));
 
-	ColliderDesc.vSize = _float3(1.f, 2.f, 1.f);
-	ColliderDesc.vCenter = _float3(0.f, ColliderDesc.vSize.y * 0.5f, 0.f);
-	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Collider_AABB"), TEXT("Com_AABB"), (CComponent**)&m_pColliderCom[COLLIDERTYPE_AABB], &ColliderDesc)))
-		return E_FAIL;
-
-	/* For.Com_OBB */
-	ZeroMemory(&ColliderDesc, sizeof(CCollider::COLLIDERDESC));
-
-	ColliderDesc.vSize = _float3(1.3f, 1.3f, 1.3f);
-	ColliderDesc.vCenter = _float3(0.f, ColliderDesc.vSize.y * 0.5f, 0.f);
-	ColliderDesc.vRotation = _float3(0.f, XMConvertToRadians(45.f), 0.f);
-	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Collider_OBB"), TEXT("Com_OBB"), (CComponent**)&m_pColliderCom[COLLIDERTYPE_OBB], &ColliderDesc)))
-		return E_FAIL;
-
-	/* For.Com_SPHERE */
-	ZeroMemory(&ColliderDesc, sizeof(CCollider::COLLIDERDESC));
-
-	ColliderDesc.vSize = _float3(1.f, 1.f, 1.f);
-	ColliderDesc.vCenter = _float3(0.f, ColliderDesc.vSize.y * 0.5f, 0.f);
-	ColliderDesc.vRotation = _float3(0.f, XMConvertToRadians(45.f), 0.f);
-	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Collider_Sphere"), TEXT("Com_SPHERE"), (CComponent**)&m_pColliderCom[COLLIDERTYPE_SPHERE], &ColliderDesc)))
+	ColliderDesc.vSize = _float3(0.3f, 0.3f, 0.05f);
+	ColliderDesc.vCenter = _float3(0.f, 0.f, 0.f);
+	if (FAILED(__super::Add_Component(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Collider_AABB"), TEXT("Com_AABB"), (CComponent**)&m_pColliderCom, &ColliderDesc)))
 		return E_FAIL;
 
 
 	return S_OK;
-}
-
-_bool CMonster::Collision_ToPlayer()
-{
-	CGameInstance*		pGameInstance = GET_INSTANCE(CGameInstance);
-
-	((COBB*)m_pColliderCom[COLLIDERTYPE_OBB])->Collision_OBB((CCollider*)pGameInstance->Get_ComponentPtr(LEVEL_GAMEPLAY, TEXT("Layer_Player"), TEXT("Com_OBB"), 0));
-
-	RELEASE_INSTANCE(CGameInstance);
-
-	return _bool();
 }
 
 CMonster * CMonster::Create(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
@@ -198,11 +224,13 @@ CGameObject * CMonster::Clone(void * pArg)
 void CMonster::Free()
 {
 	__super::Free();
-	for (auto& pCollider : m_pColliderCom)
-		Safe_Release(pCollider);
 
-	Safe_Release(m_pModelCom);
+	Safe_Release(m_pVIBufferCom);
+	Safe_Release(m_pTextureHPCom);
+	Safe_Release(m_pTextureCom);
+	Safe_Release(m_pColliderCom);
 	Safe_Release(m_pShaderCom);
 	Safe_Release(m_pRendererCom);
 	Safe_Release(m_pTransformCom);
+	Safe_Release(m_pTransformHPCom);
 }
