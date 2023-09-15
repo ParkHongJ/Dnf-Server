@@ -115,6 +115,8 @@ void Monster::IdleTick()
 		}
 	}
 
+	//플레이어의 위치를 받아와서 비교한후 Attack으로 전환
+
 	BYTE sendBuffer[PACKET_SIZE] = "";
 	
 	PacketHeader header;

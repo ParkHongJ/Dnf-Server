@@ -95,7 +95,7 @@ HRESULT CMainApp::Render()
 	}
 
 	// MakeSpriteFont "폰트이름" /FontSize:32 /FastPack /CharacterRegion:0x0020-0x00FF /CharacterRegion:0x3131-0x3163 /CharacterRegion:0xAC00-0xD800 /DefaultCharacter:0xAC00 출력파일이름.spritefont
-	m_pGameInstance->Render_Fonts(TEXT("Font_Nexon"), m_szFPS, _float2(0.f, 0.f));
+	//m_pGameInstance->Render_Fonts(TEXT("Font_Nexon"), m_szFPS, _float2(0.f, 0.f));
 
 	/*SetWindowText(g_hWnd, m_szFPS);*/
 #endif // _DEBUG

@@ -11,13 +11,17 @@ Room GRoom;
 
 Room::Room()
 {
-	Monster* monster = new Monster();
-	monster->ObjectId = DnfServer::idGenerator++;
-	monster->type = MONSTER;
-	monster->x = 0.0f;
-	monster->y = 0.0f;
-	monster->z = 0.0f;
-	Enter(monster);
+	for (size_t i = 0; i < 2; i++)
+	{
+		Monster* monster = new Monster();
+		monster->ObjectId = DnfServer::idGenerator++;
+		monster->type = MONSTER;
+		monster->x = -0.5f + i * 0.2f;
+		monster->y = 0.0f + -1.f * (i % 2) * 0.3f;
+		monster->z = 0.0f + -1.f * (i % 2) * 0.3f;
+		monster->Initialzie();
+		Enter(monster);
+	}
 }
 
 Room::~Room()
@@ -42,13 +46,13 @@ void Room::Enter(Object* object)
 	{
 		_players[object->ObjectId] = object;
 	}
-	else if (object->type == SKILL)
+	/*else if (object->type == SKILL)
 	{
 		_projectiles[object->ObjectId] = dynamic_cast<Projectile*>(object);
-	}
+	}*/
 	else if (object->type == MONSTER)
 	{
-		_monsters[object->ObjectId] = dynamic_cast<Monster*>(object);
+		_monsters[object->ObjectId] = object;
 	}
 	
 }
@@ -63,10 +67,10 @@ void Room::Leave(Object* object)
 	{
 		_players.erase(object->ObjectId);
 	}
-	else if (object->type == SKILL)
+	/*else if (object->type == SKILL)
 	{
 		_projectiles.erase(object->ObjectId);
-	}
+	}*/
 	else if (object->type == MONSTER)
 	{
 		_monsters.erase(object->ObjectId);
@@ -127,6 +131,14 @@ void Room::SendRoomInfo(int objectId, BYTE* sendBuffer, int bufferOffset)
 
 		memcpy(sendBuffer + bufferOffset, &id, sizeof(id));
 		bufferOffset += sizeof(id);
+
+		float vPos[3];
+		vPos[0] = monster.second->x;
+		vPos[1] = monster.second->y;
+		vPos[2] = monster.second->z;
+
+		memcpy(sendBuffer + bufferOffset, &vPos, sizeof(float) * 3);
+		bufferOffset += sizeof(float) * 3;
 	}
 	_players[objectId]->ownerSession->Send(sendBuffer);
 }
@@ -134,10 +146,6 @@ void Room::SendRoomInfo(int objectId, BYTE* sendBuffer, int bufferOffset)
 void Room::Update()
 {
 	lock_guard<mutex> lockguard(lock);
-	/*for (auto projectile : _projectiles)
-	{
-		projectile.second->Update();
-	}*/
 	for (auto monster : _monsters)
 	{
 		monster.second->Update();
@@ -167,7 +175,6 @@ void Room::CollisionToMonster(Collider* collider, vector<Object*>& collisionId)
 
 void Room::CollisionToPlayer(Projectile* projectile, OUT vector<Object*>& collisionId)
 {
-	//데드락..
 	for (auto player : _players)
 	{
 		//스킬을 시전한 플레이어는 제외
@@ -211,11 +218,11 @@ Object* Room::FindSkillById(int id)
 
 	map<uint64, Projectile*>::iterator iter;
 
-	iter = _projectiles.find(id);
+	/*iter = _projectiles.find(id);
 	if (iter != _projectiles.end())
 	{
 		return iter->second;
-	}
+	}*/
 	return nullptr;
 }
 
@@ -303,40 +310,21 @@ void Room::HandleSkill(Player* player, BYTE* packet)
 		
 		collider.UpdateMinMax(vPos);
 
-		switch (skill)
+		if (skill != ID_SKILL_F && skill != ID_SKILL_G)
 		{
-		case ID_SKILL_1:
-			break;
-		case ID_SKILL_2:
-			break;
-		case ID_SKILL_3:
-			break;
-		case ID_SKILL_4:
-			break;
-		case ID_SKILL_A:
-			break;
-		case ID_SKILL_S:
-			break;
-		case ID_SKILL_D:
-			break;
-		case ID_SKILL_H:
-			break;
-		default:
-			break;
-		}
+			vector<Object*> collisionObjects;
+			CollisionToMonster(&collider, collisionObjects);
 
-		vector<Object*> collisionObjects;
-		CollisionToMonster(&collider, collisionObjects);
-
-		//충돌한게 있다면
-		if (!collisionObjects.empty())
-		{
-			//충돌!!
-			cout << "충돌함!!" << endl;
-			for (auto monster : collisionObjects)
+			//충돌한게 있다면
+			if (!collisionObjects.empty())
 			{
-				monster->OnDamaged(player, 10.f);
+				//충돌!!
+				cout << "충돌함!!" << endl;
+				for (auto monster : collisionObjects)
+				{
+					monster->OnDamaged(player, 10.f);
+				}
 			}
-		}
+		}		
 	}
 }

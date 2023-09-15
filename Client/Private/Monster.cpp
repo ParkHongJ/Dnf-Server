@@ -155,7 +155,7 @@ void CMonster::RenderHP()
 
 	_vector vPos = m_pTransformCom->Get_State(CTransform::STATE_POSITION);
 
-	m_pTransformHPCom->Set_State(CTransform::STATE_POSITION, XMVectorSet(XMVectorGetX(vPos), XMVectorGetY(vPos) + 0.085f, 0.f, 1.f));
+	m_pTransformHPCom->Set_State(CTransform::STATE_POSITION, XMVectorSet(XMVectorGetX(vPos), XMVectorGetY(vPos) + 0.085f, -0.3f, 1.f));
 
 	float percentage2 = fHp / 100.f;
 	m_pShaderCom->Set_RawValue("percentage2", &percentage2, sizeof(_float));

@@ -838,54 +838,6 @@ void CPlayer::UpdateState(STATE NewState)
 
 void CPlayer::ActivateSkill(int skillid, _float3 vPos)
 {
-	/*CGameInstance* pGameInstance = CGameInstance::Get_Instance();
-
-	CGameObject* pObject = pGameInstance->Add_GameObjectToLayer(TEXT("Prototype_GameObject_Effect"), LEVEL_GAMEPLAY, L"Effect");
-
-	pObject->SetId(id);
-
-	CCollider* Collider = (CCollider*)pObject->Get_ComponentPtr(L"Com_AABB");
-
-	CCollider::COLLIDERDESC Desc = Collider->GetColliderDesc();
-
-	ServerManager* ServerMgr = ServerManager::GetInstance();
-
-	ServerMgr->AddGameObject(id, pObject);
-
-	CTransform* Transform = (CTransform*)pObject->Get_ComponentPtr(L"Com_Transform");
-
-	Transform->Set_State(CTransform::STATE_POSITION, XMVectorSetW(XMLoadFloat3(&vPos), 1.f));
-
-	BYTE sendBuffer[PACKET_SIZE] = "";
-
-	int bufferOffset = sizeof(PacketHeader);
-
-	PacketHeader header;
-	header.protocol = PKT_C_ADD_COLLIDER;
-	header.size = PACKET_SIZE;
-
-	*(PacketHeader*)sendBuffer = header;
-
-	memcpy(sendBuffer + bufferOffset, &id, sizeof(id));
-
-	bufferOffset += sizeof(id);
-
-	Type type = Type::Type_SKILL;
-
-	memcpy(sendBuffer + bufferOffset, &type, sizeof(type));
-
-	bufferOffset += sizeof(type);
-
-	memcpy(sendBuffer + bufferOffset, &Desc.vSize, sizeof(Desc.vSize));
-
-	bufferOffset += sizeof(Desc.vSize);
-
-	memcpy(sendBuffer + bufferOffset, &Desc.vCenter, sizeof(Desc.vCenter));
-
-	bufferOffset += sizeof(Desc.vCenter);
-
-	ServerMgr->Send(sendBuffer, PACKET_SIZE);*/
-	
 	SKILLID skillId = (SKILLID)skillid;
 
 	STATE NewState;
@@ -913,10 +865,35 @@ void CPlayer::ActivateSkill(int skillid, _float3 vPos)
 		NewState = SKILL_D;
 		break;
 	case ID_SKILL_F:
+	{
 		NewState = SKILL_F;
+		XMStoreFloat3(&vDestSkillPos, m_pTransformCom->Get_State(CTransform::STATE_POSITION));
+		XMStoreFloat3(&vTempPos, m_pTransformCom->Get_State(CTransform::STATE_POSITION));
+		if (m_eDir == RIGHT)
+		{
+			vDestSkillPos.x += 0.2f;
+		}
+		else
+		{
+			vDestSkillPos.x -= 0.2f;
+		}
+		
+	}
 		break;
 	case ID_SKILL_G:
+	{
 		NewState = SKILL_G;
+		XMStoreFloat3(&vDestSkillPos, m_pTransformCom->Get_State(CTransform::STATE_POSITION));
+		XMStoreFloat3(&vTempPos, m_pTransformCom->Get_State(CTransform::STATE_POSITION));
+		if (m_eDir == RIGHT)
+		{
+			vDestSkillPos.x -= 0.2f;
+		}
+		else
+		{
+			vDestSkillPos.x += 0.2f;
+		}
+	}
 		break;
 	case ID_SKILL_H:
 		NewState = SKILL_H;
@@ -936,7 +913,7 @@ void CPlayer::CloneHPRender()
 
 		_vector vPos = m_pTransformCom->Get_State(CTransform::STATE_POSITION);
 
-		m_pTransformHPCom->Set_State(CTransform::STATE_POSITION, XMVectorSet(XMVectorGetX(vPos), XMVectorGetY(vPos) + 0.085f, 0.f, 1.f));
+		m_pTransformHPCom->Set_State(CTransform::STATE_POSITION, XMVectorSet(XMVectorGetX(vPos), XMVectorGetY(vPos) + 0.09f, 0.f, 1.f));
 
 		float percentage2 = fHp / 100.f;
 		m_pShaderCom->Set_RawValue("percentage2", &percentage2, sizeof(_float));
@@ -1212,13 +1189,27 @@ void CPlayer::Skill_DTick(_float fTimeDelta)
 }
 void CPlayer::Skill_FTick(_float fTimeDelta)
 {
-	if (bAnimEnd)
+	fTime += fTimeDelta * 5.0f;
+	_vector NewPos = XMVectorLerp(XMLoadFloat3(&vTempPos), XMLoadFloat3(&vDestSkillPos), fTime / fTimeMax);
+
+	if (bAnimEnd && fTime >= fTimeMax)
+	{
+		fTime = 0.f;
 		UpdateState(STATE::IDLE);
+	}
+	m_pTransformCom->Set_State(CTransform::STATE_POSITION, XMVectorSetW(NewPos, 1.f));
 }
 void CPlayer::Skill_GTick(_float fTimeDelta)
 {
-	if (bAnimEnd)
+	fTime += fTimeDelta * 5.0f;
+	_vector NewPos = XMVectorLerp(XMLoadFloat3(&vTempPos), XMLoadFloat3(&vDestSkillPos), fTime / fTimeMax);
+
+	if (bAnimEnd && fTime >= fTimeMax)
+	{
+		fTime = 0.f;
 		UpdateState(STATE::IDLE);
+	}
+	m_pTransformCom->Set_State(CTransform::STATE_POSITION, XMVectorSetW(NewPos, 1.f));
 }
 void CPlayer::Skill_HTick(_float fTimeDelta)
 {

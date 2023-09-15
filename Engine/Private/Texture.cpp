@@ -42,8 +42,19 @@ HRESULT CTexture::Initialize_Prototype(const _tchar * pTextureFilePath, _uint iN
 			hr = E_FAIL;
 		
 		else
-			hr = DirectX::CreateWICTextureFromFile(m_pDevice, szFullPath, nullptr, &pSRV);
-
+		{
+			hr = //DirectX::CreateWICTextureFromFileEx(m_pDevice, szFullPath, nullptr, &pSRV);
+				DirectX::CreateWICTextureFromFileEx(
+					m_pDevice,
+					szFullPath,
+					NULL,
+					D3D11_USAGE_DEFAULT,
+					D3D11_BIND_SHADER_RESOURCE,
+					NULL,
+					NULL,
+					true,
+					nullptr, &pSRV);
+		}
 		if (FAILED(hr))
 			return E_FAIL;
 

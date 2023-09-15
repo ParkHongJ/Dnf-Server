@@ -178,6 +178,11 @@ private:
 
 	_float fHp = 100.f;
 	_bool bAnimEnd = false;
+
+	_float3 vDestSkillPos;
+	_float3 vTempPos;
+	_float fTime = 0.f;
+	_float fTimeMax = 1.f;
 private:
 	HRESULT Ready_Components();
 public:

@@ -79,10 +79,10 @@ HRESULT CLoader::Loading_ForLogoLevel()
 	lstrcpy(m_szLoadingText, TEXT("텍스쳐를 로딩중입니다. "));
 	/* 텍스쳐를 로드한다. */
 
-	/* For.Prototype_Component_Texture_Default */
-	if (FAILED(pGameInstance->Add_Prototype(LEVEL_LOGO, TEXT("Prototype_Component_Texture_Default"),
-		CTexture::Create(m_pDevice, m_pContext, TEXT("../Bin/Resources/Textures/Default%d.jpg"), 2))))
-		return E_FAIL;
+	///* For.Prototype_Component_Texture_Default */
+	//if (FAILED(pGameInstance->Add_Prototype(LEVEL_LOGO, TEXT("Prototype_Component_Texture_Map"),
+	//	CTexture::Create(m_pDevice, m_pContext, TEXT("../Bin/Resources/Textures/Map/Rorien.png"), 1))))
+	//	return E_FAIL;
 
 
 	lstrcpy(m_szLoadingText, TEXT("모델을 로딩중입니다. "));	
@@ -119,7 +119,10 @@ HRESULT CLoader::Loading_ForGamePlayLevel()
 	if (FAILED(pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_UIManager"),
 		CUIManager::Create(m_pDevice, m_pContext))))
 		return E_FAIL;
-
+	/* For.Prototype_Component_Texture_Default */
+	if (FAILED(pGameInstance->Add_Prototype(LEVEL_GAMEPLAY, TEXT("Prototype_Component_Texture_Map"),
+		CTexture::Create(m_pDevice, m_pContext, TEXT("../Bin/Resources/Textures/Map/Rorien.png"), 1))))
+		return E_FAIL;
 	///* For.Prototype_GameObject_UI*/
 	//if (FAILED(pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_UI"),
 	//	CUI::Create(m_pGraphic_Device))))

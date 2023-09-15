@@ -86,6 +86,10 @@ bool Handle_S_ENTER_GAME(SOCKET socket, BYTE* buffer)
 		memcpy(&id, buffer + bufferOffset, sizeof(id));
 		bufferOffset += sizeof(id);
 
+		_float3 vPos;
+		memcpy(&vPos, buffer + bufferOffset, sizeof(_float3));
+		bufferOffset += sizeof(_float3);
+
 		CGameObject* pGameObject = pGameInstance->Add_GameObjectToLayer(TEXT("Prototype_GameObject_Monster"), LEVEL_GAMEPLAY, TEXT("Layer_Player"));
 
 		if (pGameObject != nullptr)
@@ -96,6 +100,10 @@ bool Handle_S_ENTER_GAME(SOCKET socket, BYTE* buffer)
 			ServerMgr->AddGameObject(id, pGameObject);
 			CMonster* Monster = (CMonster*)pGameObject;
 			Monster->AddColliderPacket();
+			
+			CTransform* transform = (CTransform*)Monster->Get_ComponentPtr(L"Com_Transform");
+
+			transform->Set_State(CTransform::STATE_POSITION, XMVectorSetW(XMLoadFloat3(&vPos), 1.f));
 		}
 	}
 
